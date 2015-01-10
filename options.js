@@ -1,11 +1,9 @@
 // Saves options to chrome.storage
 function save_options() {
-    var when_to_send = $("when_to_send");
-    $("input:radio[name=theme]").click(function() {
-        var value = $(this).val();
-    });
+    var when_to_send = $("input[name=when_to_send]:checked").val();
+    var tip_amount = $('input[name=tip_amount]').val();
 
-    var tip_amount = document.getElementById('tip_amount').checked;
+    console.log("saving", when_to_send, tip_amount);
 
     chrome.storage.sync.set({
         when_to_send: when_to_send,
@@ -25,13 +23,14 @@ function save_options() {
 function restore_options() {
     // Use default value color = 'red' and likesColor = true.
     chrome.storage.sync.get({
-        favoriteColor: 'red',
-        likesColor: true
+        when_to_send: '5min',
+        tip_amount: 0.0001
     }, function(items) {
-        document.getElementById('color').value = items.favoriteColor;
-        document.getElementById('like').checked = items.likesColor;
+        console.log(items);
+        $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
+        $('input[name=tip_amount]').val(items.tip_amount);
     });
 }
 
-document.addEventListener('DOMContentLoaded', restore_options);
-document.getElementById('save').addEventListener('click', save_options);
+$('#save').on('click', save_options);
+restore_options();

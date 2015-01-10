@@ -19,6 +19,9 @@
       },
       "default_title": "Microtip address found on this page."
    },
+   "permissions": [
+      "storage"
+   ],
    "version": "1.0",
    "web_accessible_resources": [ "*.png" ]
 }
