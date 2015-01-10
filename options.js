@@ -28,7 +28,6 @@ function restore_options() {
         pub_key: 'none',
         priv_key: 'none',
     }, function(items) {
-        console.log(items);
         if(items.pub_key == 'none' && items.priv_key == 'none') {
             //if keys have not been generated, do so now and save them.
             var key = Bitcoin.ECKey.makeRandom();
@@ -42,7 +41,13 @@ function restore_options() {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=tip_amount]').val(items.tip_amount);
         $('#deposit_address').text(items.pub_key);
-        $('#current_balance').text("0");
+
+        $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
+            var balance = response['final_balance'];
+            $('#current_balance').text(balance);
+        })
+
+
     });
 }
 
