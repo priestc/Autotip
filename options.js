@@ -25,23 +25,24 @@ function restore_options() {
     chrome.storage.sync.get({
         when_to_send: '5min',
         tip_amount: 0.05,
-        public_key: 'none',
-        private_key: 'none',
+        pub_key: 'none',
+        priv_key: 'none',
     }, function(items) {
         console.log(items);
-        if(items.public == 'none' && items.private_key == 'none') {
+        if(items.pub_key == 'none' && items.priv_key == 'none') {
             //if keys have not been generated, do so now and save them.
             var key = Bitcoin.ECKey.makeRandom();
-            items.pubkey = key.pub.getAddress().toString();
+            items.pub_key = key.pub.getAddress().toString();
             items.priv_key = key.toWIF();
             chrome.storage.sync.set({
                 pub_key: items.pub_key,
                 priv_key: items.priv_key
-            }
+            });
         }
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=tip_amount]').val(items.tip_amount);
         $('#deposit_address').text(items.pub_key);
+        $('#current_balance').text("0");
     });
 }
 

@@ -17,7 +17,8 @@
       "default_icon": {
          "38": "orange-bitcoin-38.png"
       },
-      "default_title": "Microtip address found on this page."
+      "default_title": "Microtip address found on this page.",
+      "default_popup": "popup.html"
    },
    "permissions": [
       "storage"
