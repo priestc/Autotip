@@ -7,7 +7,7 @@
         <span id="status" style="color: red"></span>
 
         <h2>Tip amount</h2>
-        <input type="text" name="tip_amount"> BTC
+        <input type="text" name="tip_amount" style="width: 3em"> USD
 
         <h2>When to tip</h2>
         <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
@@ -15,10 +15,11 @@
         <input type="radio" name="when_to_send" value="5min">Ask after 5 minutes.<br>
 
         <h2>Deposit Address</h2>
-        <span class="deposit_address"></span> <span class="current_balance"></span>
+        <span id="deposit_address"></span> <span class="current_balance"></span>
 
         <input type="button" id="save" value="Save">
 
+        <script src="bitcoinjs.min.js"></script>
         <script src="jquery-2.1.3.min.js"></script>
         <script src="options.js"></script>
     </body>
