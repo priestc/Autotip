@@ -31,7 +31,7 @@ You can also use altcoin addresses:
 
 Currently, this extension does not support any altcoins, but support is planned.
 
-## API's used
+## APIs used
 
 This extension uses the following APIs:
 
