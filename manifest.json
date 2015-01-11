@@ -9,7 +9,8 @@
    "options_page": "options.html",
    "description": "Send microtips to pages you visit.",
    "icons": {
-      "128": "dots-128.jpg"
+      "48": "black-bitcoin-48.png",
+      "128": "black-bitcoin-128.jpg"
    },
    "manifest_version": 2,
    "name": "Microtip Extension",
