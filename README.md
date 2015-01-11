@@ -30,3 +30,11 @@ You can also use altcoin addresses:
     <meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc'>
 
 Currently, this extension does not support any altcoins, but support is planned.
+
+## API's used
+
+This extension uses the following APIs:
+
+* Bitcore - creating transactions, generating the deposit address
+* Blockr.io - getting unspent outputs, pushing raw transaction to the network
+* winkdex- getting current exchange rate

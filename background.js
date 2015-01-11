@@ -47,7 +47,16 @@ function send_tip(currency, address, autotip) {
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
             $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(resonse) {
-                var utxo = response[''];
+                var last_utxo = response['data']['unspent'][0];
+
+                var utxo = new UnspentOutput({
+                  "txid": last_utxo['tx'],
+                  "vout": last_utxo['n'],
+                  "address": pub_key,
+                  "scriptPubKey": last_utxo['script'],
+                  "amount":  last_utxo['amount']
+                });
+
                 var cents_per_btc = response['price'];
                 var dollar_tip_amount = dollar_tip_amount;
                 var btc_amount = cents_per_btc * dollar_tip_amount / 100;
@@ -55,12 +64,11 @@ function send_tip(currency, address, autotip) {
 
                 var tx = new Transaction()
                     .to(address, satoshi_amount)
+                    .from(utxo)
                     .change(pub_key)
                     .sign(priv_key);
 
-                debugger;
-
-                $.get("https://blockchain.info/pushtx", function() {
+                $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
                     console.log("pushed transaction successfully.");
                     chrome.storage.sync.set({
                         usd_tipped_so_far_today: new_accumulation
@@ -88,11 +96,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // This application uses two messages. One gets called at "page load time"
     // when a microtip meta tag gets found. And the other is called whe the user
     // clicks the tip now button on the page action popup.
-    console.log("found message");
-
 
     if(request.perform_tip) {
-        console.log("HKJHKLJHKJHKJHKJGJHG");
         send_tip(request.currency, request.address, false);
         return
     }
