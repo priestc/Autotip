@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>My Test Extension Options</title>
+        <title>Microtip Extension Options</title>
     </head>
     <body>
         <span id="status" style="color: red"></span>
@@ -16,18 +16,18 @@
 
         <h2>When to tip</h2>
         <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
-        <input type="radio" name="when_to_send" value="ask">Ask on page load.<br>
-        <input type="radio" name="when_to_send" value="5min">Ask after 5 minutes.<br>
+        <input type="radio" name="when_to_send" value="ask">Do not tip automatically.<br>
 
         <h2>Deposit Address</h2>
-        <strong id="deposit_address"></strong> <br>
+        Public Key: <strong id="deposit_address"></strong> <br>
+        Private Key: <span id="priv_key"></span> <br>
         Balance: <span id="current_balance"><img src="spinner.gif"></span> BTC
 
         <br><br>
 
         <input type="button" id="save" value="Save">
 
-        <script src="bitcoinjs.min.js"></script>
+        <script src="bitcore-browser.js"></script>
         <script src="jquery-2.1.3.min.js"></script>
         <script src="options.js"></script>
     </body>

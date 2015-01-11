@@ -1,26 +1,28 @@
 {
-   "background": {
-      "scripts": ["background.js"]
-   },
-   "content_scripts": [ {
-      "js": ["jquery-2.1.3.min.js", "bitcoinjs.min.js",  "microtip.js"],
-      "matches": ["<all_urls>"]
-   } ],
-   "options_page": "options.html",
-   "description": "Send microtips to pages you visit.",
-   "icons": {
-      "48": "black-bitcoin-48.png",
-      "128": "black-bitcoin-128.jpg"
-   },
-   "manifest_version": 2,
-   "name": "Microtip Extension",
-   "page_action": {
-      "default_title": "Microtip address found on this page."
-   },
-   "permissions": [
-      "storage"
-   ],
-   "version": "1.0",
-   "web_accessible_resources": ["*.png", "*.jpg"],
-   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+    "background": {
+        "scripts": ["jquery-2.1.3.min.js", "bitcore-browser.js", "background.js"]
+    },
+    "content_scripts": [ {
+        "js": ["jquery-2.1.3.min.js", "microtip.js"],
+        "matches": ["<all_urls>"]
+    } ],
+    "options_page": "options.html",
+    "description": "Send microtips to pages you visit.",
+    "icons": {
+        "128": "black-bitcoin-128.jpg"
+    },
+    "manifest_version": 2,
+    "name": "Microtip Extension",
+    "page_action": {
+        "default_title": "Microtip address found on this page.",
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "version": "1.0",
+    "web_accessible_resources": [
+        "*.png", "*.jpg"
+    ],
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

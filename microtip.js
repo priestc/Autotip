@@ -1,6 +1,4 @@
-function send_tip(address, amount) {
-    // this function makes the transaction and sends it to the network.
-}
+console.log('I did something!!');
 
 $("meta[name=microtip]").each(function(index, element) {
     var e = $(element);

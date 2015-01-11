@@ -23,7 +23,7 @@ function save_options() {
 function restore_options() {
     // These are default values
     chrome.storage.sync.get({
-        when_to_send: '5min',
+        when_to_send: 'ask',
         dollar_tip_amount: 0.05,
         daily_tip_limit: 0.50,
         pub_key: 'none',
@@ -31,8 +31,8 @@ function restore_options() {
     }, function(items) {
         if(items.pub_key == 'none' && items.priv_key == 'none') {
             //if keys have not been generated, do so now and save them.
-            var key = Bitcoin.ECKey.makeRandom();
-            items.pub_key = key.pub.getAddress().toString();
+            var key = new PrivateKey();
+            items.pub_key = key.toAddress().toString();
             items.priv_key = key.toWIF();
             chrome.storage.sync.set({
                 pub_key: items.pub_key,
@@ -42,10 +42,11 @@ function restore_options() {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=dollar_tip_amount]').val(items.dollar_tip_amount);
         $('input[name=daily_tip_limit]').val(items.daily_tip_limit);
+        $("#priv_key").text(items.priv_key);
         $('#deposit_address').text(items.pub_key);
 
         $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-            $('#current_balance').text(response['final_balance']); //replace spinner
+            $('#current_balance').text(response['final_balance'] / 1e8); //replace spinner
         })
     });
 }

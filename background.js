@@ -1,4 +1,4 @@
-function send_tip(currency, address, amount_usd, autotip) {
+function send_tip(currency, address, autotip) {
     chrome.storage.sync.get({
         daily_limit_start: 'none',
         usd_tipped_so_far_today: 0,
@@ -46,22 +46,25 @@ function send_tip(currency, address, amount_usd, autotip) {
         }
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
-            var cents_per_btc = response['price'];
-            var tx = new Bitcoin.Transaction();
+            $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(resonse) {
+                var utxo = response[''];
+                var cents_per_btc = response['price'];
+                var dollar_tip_amount = dollar_tip_amount;
+                var btc_amount = cents_per_btc * dollar_tip_amount / 100;
+                var satoshi_amount = btc_amount * 100000000;
 
-            var key = Bitcoin.ECKey.fromWIF(items.priv_key);
-            var dollar_tip_amount = dollar_tip_amount;
-            var btc_amount = cents_per_btc * dollar_tip_amount / 100;
-            var satoshi_amount = btc_amount * 100000000;
+                var tx = new Transaction()
+                    .to(address, satoshi_amount)
+                    .change(pub_key)
+                    .sign(priv_key);
 
-            tx.addInput(input, 0)
-            tx.addOutput(address, satoshi_amount);
-            tx.sign(0, key);
+                debugger;
 
-            $.get("https://blockchain.info/pushtx", function() {
-                console.log("pushed transaction successfully.");
-                chrome.storage.sync.set({
-                    usd_tipped_so_far_today: new_accumulation
+                $.get("https://blockchain.info/pushtx", function() {
+                    console.log("pushed transaction successfully.");
+                    chrome.storage.sync.set({
+                        usd_tipped_so_far_today: new_accumulation
+                    });
                 });
             });
         });
@@ -71,18 +74,28 @@ function send_tip(currency, address, amount_usd, autotip) {
 function get_icon_for_currency(currency) {
     var ll = currency.toLowerCase();
     if(ll == 'btc' || ll == 'bitcoin') {
-        return 'orange-bitcoin-38.png'
+        return chrome.extension.getURL('orange-bitcoin-38.png');
     }
     if(ll == 'ltc' || ll == 'litecoin') {
-        return 'litecoin-128.png'
+        return chrome.extension.getURL('litecoin-128.png');
     }
     if(ll == 'doge' || ll == 'dogecoin') {
-        return 'dogecoin-128.png'
+        return chrome.extension.getURL('dogecoin-128.png');
     }
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    // this gets called at "page load time" when a microtip meta tag gets found.
+    // This application uses two messages. One gets called at "page load time"
+    // when a microtip meta tag gets found. And the other is called whe the user
+    // clicks the tip now button on the page action popup.
+    console.log("found message");
+
+
+    if(request.perform_tip) {
+        console.log("HKJHKLJHKJHKJHKJGJHG");
+        send_tip(request.currency, request.address, false);
+        return
+    }
 
     var tab_id = sender.tab.id;
     chrome.pageAction.show(tab_id);
@@ -93,24 +106,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     });
 
     chrome.storage.sync.get({
-        when_to_send:'5min',
-        tip_amount: '0.05',
+        when_to_send:'ask',
     }, function(items) {
         if(items.when_to_send == '5min') {
-            chrome.pageAction.setPopup({
-                tabId: tab_id,
-                popup: 'After 5 mins, would you like to tip this person?'
-            });
-            setTimeout(function() {
-                console.log("chrome.browserAction");
-            }, 1000 * 5);
+            // TODO
         } else if (items.when_to_send == 'immediately') {
-            send_tip(address, currency)
+            send_tip(address, currency, true);
         } else if (items.when_to_send == 'ask') {
-            chrome.pageAction.setPopup({
-                tabId: tab_id,
-                popup: 'would you like to tip this person?'
-            });
+            // popup will open when clicked
         }
     })
 });
