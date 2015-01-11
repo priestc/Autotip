@@ -15,7 +15,7 @@ shown.
 ![screenshot](http://i.imgur.com/OmclWHr.png)
 
 
-## Website owners who would like to recieve tips
+## Website owners who would like to receive tips
 
 Add a microtip meta tag to your page:
 
