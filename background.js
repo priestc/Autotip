@@ -1,4 +1,6 @@
 function send_tip(currency, address, autotip) {
+    // fixme: get the real tip address from the page
+    var tip_address = Address.fromString('1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X');
     chrome.storage.sync.get({
         daily_limit_start: 'none',
         usd_tipped_so_far_today: 0,
@@ -63,10 +65,12 @@ function send_tip(currency, address, autotip) {
                 var satoshi_amount = btc_amount * 100000000;
 
                 var tx = new Transaction()
-                    .to(address, satoshi_amount)
+                    .to(tip_address, satoshi_amount)
                     .from(utxo)
                     .change(pub_key)
                     .sign(priv_key);
+
+                console.log(priv_key);
 
                 $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
                     console.log("pushed transaction successfully.");
@@ -116,7 +120,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if(items.when_to_send == '5min') {
             // TODO
         } else if (items.when_to_send == 'immediately') {
-            send_tip(address, currency, true);
+            send_tip(currency, request.address, true);
         } else if (items.when_to_send == 'ask') {
             // popup will open when clicked
         }
