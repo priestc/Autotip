@@ -18,7 +18,9 @@
         "default_popup": "popup.html"
     },
     "permissions": [
-        "storage"
+        "storage",
+        "http://btc.blockr.io/",
+        "http://winkdex.com"
     ],
     "version": "1.0",
     "web_accessible_resources": [

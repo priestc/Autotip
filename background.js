@@ -46,10 +46,10 @@ function send_tip(currency, address, autotip) {
         }
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
-            $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(resonse) {
+            $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
                 var last_utxo = response['data']['unspent'][0];
 
-                var utxo = new UnspentOutput({
+                var utxo = new Transaction.UnspentOutput({
                   "txid": last_utxo['tx'],
                   "vout": last_utxo['n'],
                   "address": pub_key,
