@@ -1,5 +1,7 @@
 # microtip-extension
 
+This extension was written for the Miami Bitcoin hackathon on January 9-10, 2015.
+
 ## To install the extension:
 
 run this command
@@ -17,7 +19,7 @@ shown.
 
 ## Website owners who would like to receive tips
 
-Add a microtip meta tag to your page:
+Add a microtip meta tag to your page (anywhere in the `head` or `body` of the document):
 
     <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-currency='btc'>
 
