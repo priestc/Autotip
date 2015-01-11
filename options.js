@@ -1,13 +1,13 @@
 // Saves options to chrome.storage
 function save_options() {
     var when_to_send = $("input[name=when_to_send]:checked").val();
-    var tip_amount = $('input[name=tip_amount]').val();
-
-    console.log("saving", when_to_send, tip_amount);
+    var dollar_tip_amount = $('input[name=dollar_tip_amount]').val();
+    var daily_tip_limit =$('input[name=daily_tip_limit]').val();
 
     chrome.storage.sync.set({
         when_to_send: when_to_send,
-        tip_amount: tip_amount
+        dollar_tip_amount: dollar_tip_amount,
+        daily_tip_limit: daily_tip_limit,
     }, function() {
         // Update status to let user know options were saved.
         var status = document.getElementById('status');
@@ -24,7 +24,8 @@ function restore_options() {
     // These are default values
     chrome.storage.sync.get({
         when_to_send: '5min',
-        tip_amount: 0.05,
+        dollar_tip_amount: 0.05,
+        daily_tip_limit: 0.50,
         pub_key: 'none',
         priv_key: 'none',
     }, function(items) {
@@ -39,15 +40,13 @@ function restore_options() {
             });
         }
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
-        $('input[name=tip_amount]').val(items.tip_amount);
+        $('input[name=dollar_tip_amount]').val(items.dollar_tip_amount);
+        $('input[name=daily_tip_limit]').val(items.daily_tip_limit);
         $('#deposit_address').text(items.pub_key);
 
         $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-            var balance = response['final_balance'];
-            $('#current_balance').text(balance);
+            $('#current_balance').text(response['final_balance']); //replace spinner
         })
-
-
     });
 }
 

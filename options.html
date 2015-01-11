@@ -6,8 +6,13 @@
     <body>
         <span id="status" style="color: red"></span>
 
+        <h1>Microtip Chrome Extension Options</h1>
+
         <h2>Tip amount</h2>
-        <input type="text" name="tip_amount" style="width: 3em"> USD
+        <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
+
+        <h2>Daily tip limit</h2>
+        <input type="text" name="daily_tip_limit" style="width: 3em"> USD
 
         <h2>When to tip</h2>
         <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
@@ -16,7 +21,7 @@
 
         <h2>Deposit Address</h2>
         <strong id="deposit_address"></strong> <br>
-        Balance: <span id="current_balance"></span> BTC
+        Balance: <span id="current_balance"><img src="spinner.gif"></span> BTC
 
         <br><br>
 
