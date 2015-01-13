@@ -7,7 +7,7 @@ function send_tip(currency, address, autotip) {
         daily_tip_limit: 0.5,
         pub_key: 'none',
         priv_key: 'none',
-        tip_amount: 0.05
+        dollar_tip_amount: 0.05
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -48,6 +48,7 @@ function send_tip(currency, address, autotip) {
         }
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
+            var cents_per_btc = response['price'];
             $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
                 var last_utxo = response['data']['unspent'][0];
 
@@ -59,9 +60,7 @@ function send_tip(currency, address, autotip) {
                   "amount":  last_utxo['amount']
                 });
 
-                var cents_per_btc = response['price'];
-                var dollar_tip_amount = dollar_tip_amount;
-                var btc_amount = cents_per_btc * dollar_tip_amount / 100;
+                var btc_amount = dollar_tip_amount / cents_per_btc * 100;
                 var satoshi_amount = btc_amount * 100000000;
 
                 var tx = new Transaction()
@@ -70,10 +69,8 @@ function send_tip(currency, address, autotip) {
                     .change(pub_key)
                     .sign(priv_key);
 
-                console.log(priv_key);
-
                 $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
-                    console.log("pushed transaction successfully.");
+                    console.log("pushed transaction successfully. Tipped so far today:", new_accumulation);
                     chrome.storage.sync.set({
                         usd_tipped_so_far_today: new_accumulation
                     });
