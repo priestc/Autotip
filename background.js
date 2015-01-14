@@ -49,19 +49,30 @@ function send_tip(currency, address, autotip) {
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
             var cents_per_btc = response['price'];
+            var btc_amount = dollar_tip_amount / cents_per_btc * 100;
+            var satoshi_amount = btc_amount * 100000000;
+
             $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
-                var last_utxo = response['data']['unspent'][0];
+                var utxos_from_blockrio = response['data']['unspent'];
+                var uxtos = [];
+                var total_amount = 0;
 
-                var utxo = new Transaction.UnspentOutput({
-                  "txid": last_utxo['tx'],
-                  "vout": last_utxo['n'],
-                  "address": pub_key,
-                  "scriptPubKey": last_utxo['script'],
-                  "amount":  last_utxo['amount']
+                $.each(utxos, function(index, utxo) {
+                    if(total_amount < btc_amount) {
+                        utxos.push(
+                            new Transaction.UnspentOutput({
+                                "txid": last_utxo['tx'],
+                                "vout": last_utxo['n'],
+                                "address": pub_key,
+                                "scriptPubKey": last_utxo['script'],
+                                "amount":  last_utxo['amount']
+                            })
+                        );
+                        total_amount += last_utxo['amount'];
+                    } else {
+                        return false;
+                    }
                 });
-
-                var btc_amount = dollar_tip_amount / cents_per_btc * 100;
-                var satoshi_amount = btc_amount * 100000000;
 
                 var tx = new Transaction()
                     .to(tip_address, satoshi_amount)
