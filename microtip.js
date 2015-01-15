@@ -11,4 +11,4 @@ $("meta[name=microtip]").each(function(index, element) {
 if(tips_on_this_page.length > 0) {
     chrome.runtime.sendMessage({found_tips: tips_on_this_page});
     console.log("found " + tips_on_this_page.length + " microtips");
-});
+}

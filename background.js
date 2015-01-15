@@ -134,42 +134,51 @@ function get_icon_for_currency(currency) {
     }
 }
 
+var tip_addresses = [];
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    // Called whe the user
-    // clicks the tip now button on the page action popup.
+    // dispatches all messages
 
     if(request.perform_tip) {
         // user clicked the "tip now" button
         send_tip(request.currency, request.address, false);
         return
     }
-}
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    // when microtip meta tags gets found.
+    if(request.get_tips) {
+        // the popup's js needs the tips for that page.
+        sendResponse({tips: tip_addresses[sender.tab.id]});
+    }
 
-    // show the icon to the right currency
-    var tab_id = sender.tab.id;
-    chrome.pageAction.show(tab_id);
+    if(request.found_tips) {
+        // report list of tips found on the page.
 
-    $.each(request.found_tips, function(index, tip) {
-        // set the tip icon based on the last tip's currency
-        chrome.pageAction.setIcon({
-            tabId: tab_id,
-            path: get_icon_for_currency(tip.currency)
+        var tab_id = sender.tab.id;
+        chrome.pageAction.show(tab_id);
+
+        $.each(request.found_tips, function(index, tip) {
+            // set the tip icon based on the last tip's currency
+            chrome.pageAction.setIcon({
+                tabId: tab_id,
+                path: get_icon_for_currency(tip.currency)
+            });
         });
-    });
 
-    chrome.storage.sync.get({
-        when_to_send: 'ask',
-    }, function(items) {
-        if(items.when_to_send == '5min') {
-            // TODO: wait for 5 minutes, then prompt the user.
-        } else if (items.when_to_send == 'immediately') {
-            send_tip(currency, request.address, true);
-        } else if (items.when_to_send == 'ask') {
-            // popup will open when icon is clicked
-            // that popup will send the tip
-        }
-    })
+        chrome.storage.sync.get({
+            when_to_send: 'ask',
+        }, function(items) {
+            if(items.when_to_send == '5min') {
+                // TODO: wait for 5 minutes, then prompt the user.
+            } else if (items.when_to_send == 'immediately') {
+                $.each(request.found_tips, function(index, tip) {
+                    send_tip(tip.currency, tip.address, true);
+                });
+            } else if (items.when_to_send == 'ask') {
+                // popup will open when icon is clicked
+                // that popup will send the tip
+                // save for when the popup needs them.
+                var tip_addresses[tab_id] = request.found_tips;
+            }
+        });
+    }
 });

@@ -1,12 +1,16 @@
-$("#now").click(function() {
-    chrome.runtime.sendMessage({perform_tip: "manual"}, function(response) {
-      console.log("sent!");
-    });
-});
+chrome.runtime.sendMessage({get_tips: true}, function(response) {
+    var tips = response.tips;
+    // when the popup is launched, get list of tips found on the page
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log("POPUP.JS", request);
-    if(request.address) {
-        $("#tip_address").text(request.address);
+    $("#now").click(function() {
+        // when the 'tip now' buton is clicked, tell the background to send the tips.
+        chrome.runtime.sendMessage({perform_tip: "manual", tips: tips}, function(response) {
+            // when all tips have been sent, log so the user knows.
+            console.log("sent " + tips.length + " tips!");
+        });
+    });
+
+    $.each(tips, function(index, tip) {
+        $("#tip_address").append(tip.address + " ");
     }
 });
