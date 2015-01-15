@@ -80,8 +80,6 @@ function send_tip(currency, address, autotip) {
                     .change(pub_key)
                     .sign(priv_key);
 
-                //console.log(tx.serialize(), utxos);
-
                 $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
                     console.log("pushed transaction successfully. Tipped so far today:", new_accumulation);
                     chrome.storage.sync.set({
@@ -112,6 +110,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // clicks the tip now button on the page action popup.
 
     if(request.perform_tip) {
+        // user clicked the "tip now" button
         send_tip(request.currency, request.address, false);
         return
     }
