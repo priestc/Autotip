@@ -97,6 +97,11 @@ function send_tip(currency, address, autotip) {
                     }
                 });
 
+                if(total_amount < satoshi_amount) {
+                    console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
+                    return
+                }
+
                 var tx = new Transaction()
                     .to(tip_address, satoshi_amount)
                     .from(utxos)
