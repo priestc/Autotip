@@ -25,6 +25,8 @@ You'll see a deposit address near the bottom. Send a small amount of bitcoin to 
 address. Less than $25 worth of bitcoin is recommended. This extension was not built with
 extreme security in mind, so it is advised to not hold large amounts in the extension.
 
+![screenshot](http://i.imgur.com/8ZOpWOk.png)
+
 Once the bitcoins have been sent, you'll see the balance show below the private key.
 
 Now whenever you load a page that has been set up to use the Autotip standard,
