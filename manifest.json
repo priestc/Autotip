@@ -1,6 +1,6 @@
 {
-    "name": "Microtip Extension",
-    "description": "Send microtips to pages you visit.",
+    "name": "Autotip",
+    "description": "Cryptocurrency microtip platform.",
     "version": "1.0",
     "icons": {
         "128": "black-bitcoin-128.jpg"

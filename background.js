@@ -135,8 +135,7 @@ function get_icon_for_currency(currency) {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    // This application uses two messages. One gets called at "page load time"
-    // when a microtip meta tag gets found. And the other is called whe the user
+    // Called whe the user
     // clicks the tip now button on the page action popup.
 
     if(request.perform_tip) {
@@ -144,7 +143,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         send_tip(request.currency, request.address, false);
         return
     }
+}
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    // when microtip meta tags gets found.
+
+    // show the icon to the right currency
     var tab_id = sender.tab.id;
     chrome.pageAction.show(tab_id);
 
