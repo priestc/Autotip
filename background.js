@@ -54,21 +54,21 @@ function send_tip(currency, address, autotip) {
 
             $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
                 var utxos_from_blockrio = response['data']['unspent'];
-                var uxtos = [];
+                var utxos = [];
                 var total_amount = 0;
 
-                $.each(utxos, function(index, utxo) {
-                    if(total_amount < btc_amount) {
+                $.each(utxos_from_blockrio, function(index, utxo) {
+                    if(total_amount < satoshi_amount) {
                         utxos.push(
                             new Transaction.UnspentOutput({
-                                "txid": last_utxo['tx'],
-                                "vout": last_utxo['n'],
+                                "txid": utxo['tx'],
+                                "vout": utxo['n'],
                                 "address": pub_key,
-                                "scriptPubKey": last_utxo['script'],
-                                "amount":  last_utxo['amount']
+                                "scriptPubKey": utxo['script'],
+                                "amount":  utxo['amount']
                             })
                         );
-                        total_amount += last_utxo['amount'];
+                        total_amount += utxo['amount'];
                     } else {
                         return false;
                     }
@@ -76,9 +76,11 @@ function send_tip(currency, address, autotip) {
 
                 var tx = new Transaction()
                     .to(tip_address, satoshi_amount)
-                    .from(utxo)
+                    .from(utxos)
                     .change(pub_key)
                     .sign(priv_key);
+
+                //console.log(tx.serialize(), utxos);
 
                 $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
                     console.log("pushed transaction successfully. Tipped so far today:", new_accumulation);
