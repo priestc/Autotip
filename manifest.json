@@ -20,7 +20,7 @@
     "permissions": [
         "storage",
         "http://btc.blockr.io/",
-        "http://winkdex.com/"
+        "https://winkdex.com/"
     ],
     "version": "1.0",
     "web_accessible_resources": [
