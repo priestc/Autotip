@@ -152,20 +152,24 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var tab_id = sender.tab.id;
     chrome.pageAction.show(tab_id);
 
-    chrome.pageAction.setIcon({
-        tabId: tab_id,
-        path: get_icon_for_currency(request.currency)
+    $.each(request.found_tips, function(index, tip) {
+        // set the tip icon based on the last tip's currency
+        chrome.pageAction.setIcon({
+            tabId: tab_id,
+            path: get_icon_for_currency(tip.currency)
+        });
     });
 
     chrome.storage.sync.get({
-        when_to_send:'ask',
+        when_to_send: 'ask',
     }, function(items) {
         if(items.when_to_send == '5min') {
-            // TODO
+            // TODO: wait for 5 minutes, then prompt the user.
         } else if (items.when_to_send == 'immediately') {
             send_tip(currency, request.address, true);
         } else if (items.when_to_send == 'ask') {
-            // popup will open when clicked
+            // popup will open when icon is clicked
+            // that popup will send the tip
         }
     })
 });

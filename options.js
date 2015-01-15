@@ -5,8 +5,6 @@ function save_options() {
     var daily_tip_limit = $('input[name=daily_tip_limit]').val();
     var one_per_address = $("input[name=one_per_address]:checked").length
 
-
-
     chrome.storage.sync.set({
         when_to_send: when_to_send,
         dollar_tip_amount: dollar_tip_amount,

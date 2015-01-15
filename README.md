@@ -44,7 +44,6 @@ Somewhere in the HTML document of your blog's header, you can add a meta take li
 
     <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-currency='btc'>
 
-
 (Replace the value of `content` with your actual bitcoin address. To get started with bitcoin, go here: )
 
 You can also use altcoin addresses:

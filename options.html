@@ -1,32 +1,46 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Microtip Extension Options</title>
+        <title>Autotip Options</title>
+        <style>
+            #container {
+                width: 40%;
+                background: #dfdfdf;
+                border: 1px solid #888888;
+                padding: 10px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
     </head>
     <body>
-        <span id="status" style="color: red"></span>
+        <div id="container">
+            <span id="status" style="color: red"></span>
 
-        <h1>Microtip Chrome Extension Options</h1>
+            <h1>Autotip Options</h1>
 
-        <h2>Tip amount</h2>
-        <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
+            <h2>Tip amount</h2>
+            <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
+            <br><small>This amount gets sent to each page you elect to tip. If there are multiple
+            tip addresses, this amount will get split up amongst each address.</small>
 
-        <h2>Daily tip limit</h2>
-        <input type="text" name="daily_tip_limit" style="width: 3em"> USD
+            <h2>Daily tip limit</h2>
+            <input type="text" name="daily_tip_limit" style="width: 3em"> USD
 
-        <h2>When to tip</h2>
-        <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
-        <input type="radio" name="when_to_send" value="ask">Do not tip automatically.<br>
-        <input type="checkbox" name="one_per_address"> Limit to one tip per address per day.<br>
+            <h2>When to tip</h2>
+            <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
+            <input type="radio" name="when_to_send" value="ask">Do not tip automatically.<br>
+            <input type="checkbox" name="one_per_address"> Limit to one tip per address per day.<br>
 
-        <h2>Deposit Address</h2>
-        Public Key: <strong id="deposit_address"></strong> <br>
-        Private Key: <span id="priv_key"></span> <br>
-        Balance: <span id="current_balance"><img src="spinner.gif"></span> BTC
+            <h2>Deposit Address</h2>
+            Public Key: <strong id="deposit_address"></strong> <br>
+            Private Key: <span id="priv_key"></span> <br>
+            Balance: <span id="current_balance"><img src="spinner.gif"></span> BTC
 
-        <br><br>
+            <br><br>
 
-        <input type="button" id="save" value="Save">
+            <input type="button" id="save" value="Save">
+        </div>
 
         <script src="bitcore.browser.min.js"></script>
         <script src="jquery-2.1.3.min.js"></script>
