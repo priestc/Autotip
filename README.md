@@ -52,17 +52,56 @@ You can also use altcoin addresses:
 
     <meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc'>
 
-# multiple tipping addresses per page
+# Multiple tipping addresses per page
 
 The standard also permits the use of multiple tip addresses. In the case that the extension finds
 multiple tip addresses, the tip gets split amoung each address equally.
 
 Currently, this extension does not support sending tips to altcoin addresses, but support is planned.
 
+# Full meta tag specification
+
+The following attributes are associated with the meta tag specification:
+
+| attribute      | required | description |
+-----------------------------------------------------------------
+| name           | required | always "microtip"
+--------------------------------------------------------------------
+| content        | required | The private key of the cryptocurrency address of the person who will recieve tips.
+------------------------------------------------------------
+| data-currency  | optional | The name of the currency. Examples: `BTC`, `LTC`, also you can write the whole name of the curency, such as "dogecoin", and "peercoin". Case insensitive. If left blank, `btc` is implied.
+-------------------------------------------------------------------
+| data-recipient | optional | Human readable name of the person who will revieve the tips. Can be a person's name or just "Development team". The purpose of this field is to be shown to the tipping user at the time of making the tip.
+------------------------------------------------------------------
+| data-ratio   |  optional | Only applicable if there are multiple microtip tags on a single page. This attribute tells the tiping extension how much of the tip should go to this address. The value should be a decimal number between 0 and 1.0.
+-----------------------------------------------------------------
+
+# Examples
+
+One single Litecoin address, all going to the "Development Team" wallet address.
+
+    <meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc' data-recipient="Development Team">
+
+Two different bitcoin address. Half going to Bob, the other half going to Terry. (Bitcoin currency is implied)
+
+    <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-recipient="Bob">
+    <meta name="microtip" content="1DCzzFuW33YJv9RGUMHyvgaoTdcNkwGMeR" data-recipient="Terry">
+
+Same as above, but 80% of all tips goes to Terry, 20% goes to Bob.
+
+    <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-recipient="Bob" data-ratio="0.2">
+    <meta name="microtip" content="1DCzzFuW33YJv9RGUMHyvgaoTdcNkwGMeR" data-recipient="Terry" data-ratio="0.8">
+
+To see some pages with these meta tags, checkout these test pages (all addreses belong to the Autotip project)
+
+* [Multiple addresses](http://priestc.github.io/Autotip/test_double.html)
+* [Altcoin tip address](http://priestc.github.io/Autotip/test_altcoin.html)
+
 ## APIs used
 
 This extension uses the following APIs:
 
-* Bitcore - creating transactions, generating the deposit address
-* Blockr.io - getting unspent outputs, pushing raw transaction to the network
-* winkdex- getting current exchange rate
+* [Bitcore](http://bitcore.io) - creating transactions, generating the deposit address
+* [Blockr.io](http://blockr.io) - getting unspent outputs, pushing raw transaction to the network
+* [Winkdex](https://winkdex.com) - getting current exchange rate
+* [Blockchain.info](http://blockchain.info) - getting balance of an address.
