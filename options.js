@@ -53,8 +53,13 @@ function restore_options() {
         }
 
         $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-            $('#current_balance').text(response['final_balance'] / 1e8); //replace spinner
-        })
+            var balance = response['final_balance'] / 1e8; //replace spinner
+            $.get("https://winkdex.com/api/v0/price", function(response) {
+                var cents_per_btc = response['price'];
+                var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
+                $('#current_balance').text(balance + " BTC (" + fiat_amount +" USD)" ); //replace spinner
+            });
+        });
     });
 }
 
