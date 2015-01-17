@@ -36,7 +36,7 @@ to the person who created the content on the page.
 ## Setup for content creators
 
 Lets say you're a blogger. You would like to earm money from the audience that reads your blogs.
-One way to do this is to put ads on your site. Ads can be easely blocked, and for users
+One way to do this is to put ads on your site. Ads can be easily blocked, and for users
 who don't block them, they are annoying to look at.
 
 Getting started using the platform is as easy as adding a snippet of code to every
@@ -44,13 +44,18 @@ page that contains content.
 
 Somewhere in the HTML document of your blog's header, you can add a meta take like this:
 
-    <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-currency='btc'>
+    <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-currency='btc' data-recipient="John Doe">
 
-(Replace the value of `content` with your actual bitcoin address. To get started with bitcoin, go here: )
+(Replace the value of `content` with your actual bitcoin address. To get started with bitcoin, go to [bitcoin.org](https://bitcoin.org/en/).
 
 You can also use altcoin addresses:
 
     <meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc'>
+
+# multiple tipping addresses per page
+
+The standard also permits the use of multiple tip addresses. In the case that the extension finds
+multiple tip addresses, the tip gets split amoung each address equally.
 
 Currently, this extension does not support sending tips to altcoin addresses, but support is planned.
 
