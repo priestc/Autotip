@@ -17,7 +17,17 @@ chrome.tabs.query({
         });
 
         $.each(tips, function(index, tip) {
-            $("#tip_address").append(tip.address + " ");
+            var ratio = "100%";
+            var recipient = "";
+            if(tip.ratio) {
+                ratio = Number(tip.ratio * 100).toFixed(1) + "%";
+            }
+            if(tip.recipient) {
+                recipient = "<big>" + tip.recipient + " (" + ratio + ")</big><br>";
+            }
+
+            var tip_html = recipient + "<small>" + tip.address + "</small><br><br>"
+            $("#tip_address").append(tip_html);
         });
     });
 });

@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <style>
+            #popup_container {width: 400px}
+        </style>
+    </head>
     <body>
-        The owner of this site has supplied a tip address.
-        <span id='tip_address'></span>
-        <input type="button" id="now" value="Tip now">
-        <input type="button" id="not_now" value="Do not tip">
-
+        <div id="popup_container">
+            This site contains tip addresses:<br><br>
+            <span id='tip_address'></span>
+            <input type="button" id="now" value="Tip now">
+        </div>
         <script src="jquery-2.1.3.min.js"></script>
         <script src="popup.js"></script>
     </body>

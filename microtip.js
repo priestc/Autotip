@@ -4,7 +4,9 @@ function get_tips() {
         var e = $(element);
         tips_on_this_page.push({
             'currency': e.data('currency'),
-            'address': e.attr('content')
+            'address': e.attr('content'),
+            'ratio': e.data('ratio'),
+            'recipient': e.data('recipient')
         });
     });
     return tips_on_this_page
