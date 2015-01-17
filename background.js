@@ -1,6 +1,4 @@
-function send_tip(currency, address, autotip) {
-    // fixme: get the real tip address from the page
-    var tip_address = Address.fromString('1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X');
+function send_tips(tips, autotip) {
     chrome.storage.sync.get({
         daily_limit_start: 'none',
         usd_tipped_so_far_today: 0,
@@ -30,6 +28,7 @@ function send_tip(currency, address, autotip) {
 
         if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
             // it was over a day ago since we've been keeping track, reset the interval
+            console.log("Resetting interval now. Old interval started:", new Date(daily_limit_start * 1000))
             chrome.storage.sync.set({
                 usd_tipped_so_far_today: 0,
                 daily_limit_start: now_timestamp,
@@ -42,15 +41,10 @@ function send_tip(currency, address, autotip) {
             } else if (autotip) {
                 // over the limit, do not tip
                 cancel_tip = true;
-                cancel_reason = "Over daily limit: " + usd_tipped_so_far_today + " since " + new Date(daily_limit_start * 1000);
+                cancel_reason = "Over daily limit: " + usd_tipped_so_far_today;
             } else {
                 // we are over the limit, but its a manual tip, so we let it through
             }
-        }
-
-        if(all_tipped_addresses_today.indexOf(address) >= 0) {
-            cancel_tip = true;
-            cancel_reason = "Already tipped this address today " + all_tipped_addresses_today
         }
 
         if(cancel_tip) {
@@ -58,13 +52,12 @@ function send_tip(currency, address, autotip) {
             return
         }
 
+        console.log("Interval start:", new Date(daily_limit_start * 1000));
+        console.log("All addresses today:", all_tipped_addresses_today)
+
         /////////////////////////////////////////////////////
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
-
-        if(currency != 'btc') {
-            // call shapeshift.io if needed to get a conversion address
-        }
 
         $.get("https://winkdex.com/api/v0/price", function(response) {
             var cents_per_btc = response['price'];
@@ -74,11 +67,11 @@ function send_tip(currency, address, autotip) {
             console.log('called winkdex: ', cents_per_btc / 100);
 
             $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
-                console.log('called blockrio: ', response['data']['unspent'].length, " inputs");
+                console.log('called blockrio: found ', response['data']['unspent'].length, " inputs");
+
                 var utxos_from_blockrio = response['data']['unspent'];
                 var utxos = [];
                 var total_amount = 0;
-
                 $.each(utxos_from_blockrio, function(index, utxo) {
                     // loop through each unspent output until we get enough to cover the cost of this tip.
                     if(total_amount < satoshi_amount) {
@@ -97,20 +90,52 @@ function send_tip(currency, address, autotip) {
                     }
                 });
 
-                if(total_amount < satoshi_amount) {
+                if(total_amount < btc_amount) {
                     console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
+                    console.log("Needed: ", btc_amount ,"you only have: ", total_amount);
                     return
                 }
 
-                var tx = new Transaction()
-                    .to(tip_address, satoshi_amount)
-                    .from(utxos)
-                    .change(pub_key)
-                    .sign(priv_key);
+                var tx = new Transaction().from(utxos).change(pub_key);
+                $.each(tips, function(index, tip) {
+                    if(all_tipped_addresses_today.indexOf(tip.address) >= 0) {
+                        console.log("Already tipped this address today " + all_tipped_addresses_today);
+                        return
+                    }
+                    var this_tip_amount = Math.floor(satoshi_amount / tips.length);
 
-                $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.serialize()}, function(response) {
+                    if(tip.currency == 'btc') {
+                        tx = tx.to(Address.fromString(tip.address), this_tip_amount);
+                        console.log('Added', tip.address, "to transaction at", this_tip_amount);
+                    } else if(clean_currency(tip.currency)){
+                        // call shapeshift.io to convert the bitcoin tip to altcoin
+                        //$.ajax({
+                        //    url: "http://shapeshift.io/shift",
+                        //    type: "post",
+                        //    async: false,
+                        //    data: {
+                        //        withdrawal: tip.address,
+                        //        pair: "btc_" + clean_currency(currency),
+                        //        amount: btc_amount,
+                        //        returnAddress: return_address
+                        //    },
+                        //    success: function(response) {
+                        //        var ssio_address = Address.fromString(response.deposit);
+                        //        tx = tx.to(ssio_address, this_tip_amount);
+                        //    }
+                        //});
+                    } else {
+                        console.log("Unknown currency (not supported by shapeshift.io)", tip.currency);
+                    }
+                });
+
+                $.post("http://btc.blockr.io/api/v1/tx/push", {hex: tx.sign(priv_key).serialize()}, function(response) {
                     console.log("Pushed transaction successfully. Tipped so far today:", new_accumulation);
-                    all_tipped_addresses_today.push(address);
+
+                    $.each(tips, function(index, tip) {
+                        // mark each address as having been sent to for today
+                        all_tipped_addresses_today.push(tip.address);
+                    });
                     chrome.storage.sync.set({
                         usd_tipped_so_far_today: new_accumulation,
                         all_tipped_addresses_today: all_tipped_addresses_today
@@ -121,15 +146,49 @@ function send_tip(currency, address, autotip) {
     });
 }
 
-function get_icon_for_currency(currency) {
+function clean_currency(currency) {
+    // make sure the curency code is a correct code, allowing for
+    // upper case, lower case and the full currency name.
     var ll = currency.toLowerCase();
     if(ll == 'btc' || ll == 'bitcoin') {
-        return chrome.extension.getURL('orange-bitcoin-38.png');
+        return 'btc';
     }
     if(ll == 'ltc' || ll == 'litecoin') {
-        return chrome.extension.getURL('litecoin-128.png');
+        return 'ltc';
     }
     if(ll == 'doge' || ll == 'dogecoin') {
+        return 'doge';
+    }
+    if(ll == 'rdd' || ll == 'reddcoin') {
+        return 'rdd';
+    }
+    if(ll == 'ppc' || ll == 'peercoin') {
+        return 'ppc';
+    }
+    if(ll == 'bc' || ll == 'blackcoin') {
+        return 'rdd';
+    }
+    if(ll == 'drk' || ll == 'darkcoin') {
+        return 'drk';
+    }
+    if(ll == 'qrk' || ll == 'quark') {
+        return 'qrk';
+    }
+    if(ll == 'nxt') {
+        return 'nxt';
+    }
+    return null;
+}
+
+function get_icon_for_currency(currency) {
+    var cleaned = clean_currency(currency);
+    if(cleaned == 'btc') {
+        return chrome.extension.getURL('orange-bitcoin-38.png');
+    }
+    if(cleaned == 'ltc') {
+        return chrome.extension.getURL('litecoin-128.png');
+    }
+    if(cleaned == 'doge') {
         return chrome.extension.getURL('dogecoin-128.png');
     }
 }
@@ -141,13 +200,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.perform_tip) {
         // user clicked the "tip now" button
-        send_tip(request.currency, request.address, false);
+        send_tips(request.tips, false);
         return
     }
 
     if(request.get_tips) {
         // the popup's js needs the tips for that page.
-        sendResponse({tips: tip_addresses[sender.tab.id]});
+        sendResponse({tips: tip_addresses[request.tab]});
+        return
     }
 
     if(request.found_tips) {
@@ -170,14 +230,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             if(items.when_to_send == '5min') {
                 // TODO: wait for 5 minutes, then prompt the user.
             } else if (items.when_to_send == 'immediately') {
-                $.each(request.found_tips, function(index, tip) {
-                    send_tip(tip.currency, tip.address, true);
-                });
+                send_tips(request.found_tips, true);
             } else if (items.when_to_send == 'ask') {
                 // popup will open when icon is clicked
                 // that popup will send the tip
                 // save for when the popup needs them.
-                var tip_addresses[tab_id] = request.found_tips;
+                tip_addresses[tab_id] = request.found_tips;
             }
         });
     }
