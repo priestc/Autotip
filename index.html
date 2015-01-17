@@ -1,42 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Autotip : Decentralized cryptocurrency microtipping platform">
-    <meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-currency='btc' data-recipient="Chris Priest (Developer)">
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <title>Autotip by priestc</title>
 
-    <title>Autotip</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
+    <div class="wrapper">
+      <header>
+        <h1>Autotip</h1>
+        <p>Decentralized Cryptocurrency Microtipping Platform</p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/priestc/Autotip">View on GitHub</a>
+        <p class="view"><a href="https://github.com/priestc/Autotip">View the Project on GitHub <small>priestc/Autotip</small></a></p>
 
-          <h1 id="project_title">Autotip</h1>
-          <h2 id="project_tagline">Decentralized Cryptocurrency Microtipping Platform</h2>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/priestc/Autotip/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/priestc/Autotip/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <p>Autotip is an:</p>
+        <ul>
+          <li><a href="https://github.com/priestc/Autotip/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/priestc/Autotip/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/priestc/Autotip">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>Autotip is:</p>
 
 <ul>
-<li>Open source Google Chrome extension.</li>
-<li>Alternate way for content creators (bloggers, forums posters, artists) to monitize their content.</li>
-<li>HTML5 standards compliant convention (official inclusion to the HTML standard is pending).</li>
+<li>An Open source Google Chrome extension.</li>
+<li>Completely Decentralized. All tips move directly from tipper to tipee with no middleman.</li>
+<li>Alternate way for content creators (bloggers, forums posters, artists) to monetize their content.</li>
+<li>HTML5 standards compliant (official inclusion to the HTML standard is <a href="https://github.com/priestc/Autotip/issues/1">pending</a>).</li>
 <li>works for Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.</li>
 <li>is configurable to be sent automatically on each pageload, or only by prompt.</li>
 </ul>
@@ -97,28 +95,97 @@ multiple tip addresses, the tip gets split amoung each address equally.</p>
 
 <p>Currently, this extension does not support sending tips to altcoin addresses, but support is planned.</p>
 
+<h1>
+<a id="full-meta-tag-specification" class="anchor" href="#full-meta-tag-specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Full meta tag specification</h1>
+
+<p>The following attributes are associated with the meta tag specification:</p>
+
+<table>
+<thead>
+<tr>
+<th>attribute</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>required</td>
+<td>always "microtip"</td>
+</tr>
+<tr>
+<td>content</td>
+<td>required</td>
+<td>The private key of the cryptocurrency address of the person who will recieve tips.</td>
+</tr>
+<tr>
+<td>data-currency</td>
+<td>optional</td>
+<td>The name of the currency. Examples: <code>BTC</code>, <code>LTC</code>, also you can write the whole name of the curency, such as "dogecoin", and "peercoin". Case insensitive. If left blank, <code>btc</code> is implied.</td>
+</tr>
+<tr>
+<td>data-recipient</td>
+<td>optional</td>
+<td>Human readable name of the person who will revieve the tips. Can be a person's name or just "Development team". The purpose of this field is to be shown to the tipping user at the time of making the tip.</td>
+</tr>
+<tr>
+<td>data-ratio</td>
+<td>optional</td>
+<td>Only applicable if there are multiple microtip tags on a single page. This attribute tells the tiping extension how much of the tip should go to this address. The value should be a decimal number between 0 and 1.0.</td>
+</tr>
+</tbody>
+</table>
+
+<h1>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h1>
+
+<p>One single Litecoin address, all going to the "Development Team" wallet address.</p>
+
+<pre><code>&lt;meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc' data-recipient="Development Team"&gt;
+</code></pre>
+
+<p>Two different bitcoin address. Half going to Bob, the other half going to Terry. (Bitcoin currency is implied)</p>
+
+<pre><code>&lt;meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-recipient="Bob"&gt;
+&lt;meta name="microtip" content="1DCzzFuW33YJv9RGUMHyvgaoTdcNkwGMeR" data-recipient="Terry"&gt;
+</code></pre>
+
+<p>Same as above, but 80% of all tips goes to Terry, 20% goes to Bob.</p>
+
+<pre><code>&lt;meta name="microtip" content="1HWpyFJ7N6rvFkq3ZCMiFnqM6hviNFmG5X" data-recipient="Bob" data-ratio="0.2"&gt;
+&lt;meta name="microtip" content="1DCzzFuW33YJv9RGUMHyvgaoTdcNkwGMeR" data-recipient="Terry" data-ratio="0.8"&gt;
+</code></pre>
+
+<p>To see some pages with these meta tags, checkout these test pages (all addreses belong to the Autotip project)</p>
+
+<ul>
+<li><a href="http://priestc.github.io/Autotip/test_double.html">Multiple addresses</a></li>
+<li><a href="http://priestc.github.io/Autotip/test_altcoin.html">Altcoin tip address</a></li>
+</ul>
+
 <h2>
 <a id="apis-used" class="anchor" href="#apis-used" aria-hidden="true"><span class="octicon octicon-link"></span></a>APIs used</h2>
 
 <p>This extension uses the following APIs:</p>
 
 <ul>
-<li>Bitcore - creating transactions, generating the deposit address</li>
-<li>Blockr.io - getting unspent outputs, pushing raw transaction to the network</li>
-<li>winkdex- getting current exchange rate</li>
+<li>
+<a href="http://bitcore.io">Bitcore</a> - creating transactions, generating the deposit address</li>
+<li>
+<a href="http://blockr.io">Blockr.io</a> - getting unspent outputs, pushing raw transaction to the network</li>
+<li>
+<a href="https://winkdex.com">Winkdex</a> - getting current exchange rate</li>
+<li>
+<a href="http://blockchain.info">Blockchain.info</a> - getting balance of an address.</li>
 </ul>
       </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Autotip maintained by <a href="https://github.com/priestc">priestc</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/priestc">priestc</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
-
-
-
+    <script src="javascripts/scale.fix.js"></script>
+    
   </body>
 </html>
