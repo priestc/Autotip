@@ -7,7 +7,7 @@ function send_tips(tips, autotip) {
         priv_key: 'none',
         dollar_tip_amount: 0.05,
         all_tipped_addresses_today: [],
-        beep_on_tip: false
+        beep_on_tip: true
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -154,7 +154,7 @@ function send_tips(tips, autotip) {
                         all_tipped_addresses_today: all_tipped_addresses_today
                     });
 
-                    if(beep_on_tip) {
+                    if(items.beep_on_tip) {
                         var audio = new Audio(chrome.extension.getURL("beep.wav"));
                         audio.play();
                     }

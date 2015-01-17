@@ -2,11 +2,13 @@
 <html>
     <head>
         <style>
-            #popup_container {width: 400px}
+            #popup_container {width: 400px; height: 300px; overflow: scroll}
         </style>
     </head>
     <body>
+        <h1>Autotip</h1>
         <div id="popup_container">
+            <div id="status"></div>
             This site contains tip addresses:<br><br>
             <span id='tip_address'></span>
             <input type="button" id="now" value="Tip now">

@@ -53,6 +53,9 @@ function restore_options() {
         if(items.one_per_address) {
             $('input[name=one_per_address]').attr('checked', 'checked');
         }
+        if(items.beep_on_tip) {
+            $('input[name=beep_on_tip]').attr('checked', 'checked');
+        }
 
         $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
             var balance = response['final_balance'] / 1e8; //replace spinner
