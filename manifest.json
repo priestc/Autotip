@@ -22,7 +22,8 @@
         "storage",
         "tabs",
         "http://btc.blockr.io/",
-        "https://winkdex.com/"
+        "https://winkdex.com/",
+        "http://shapeshift.io/"
     ],
     "web_accessible_resources": [
         "*.png", "*.jpg", "*.js"

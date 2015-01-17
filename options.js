@@ -3,7 +3,8 @@ function save_options() {
     var when_to_send = $("input[name=when_to_send]:checked").val();
     var dollar_tip_amount = $('input[name=dollar_tip_amount]').val();
     var daily_tip_limit = $('input[name=daily_tip_limit]').val();
-    var one_per_address = $("input[name=one_per_address]:checked").length
+    var one_per_address = $("input[name=one_per_address]:checked").length;
+    var beep_on_tip = $("input[name=beep_on_tip]:checked").length;
 
     chrome.storage.sync.set({
         when_to_send: when_to_send,
@@ -31,6 +32,7 @@ function restore_options() {
         pub_key: 'none',
         priv_key: 'none',
         one_per_address: true,
+        beep_on_tip: true,
     }, function(items) {
         if(items.pub_key == 'none' && items.priv_key == 'none') {
             //if keys have not been generated, do so now and save them.
