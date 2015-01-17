@@ -1,10 +1,11 @@
 # Autotip
 
-Autotip is an:
+Autotip is:
 
-* Open source Google Chrome extension.
-* Alternate way for content creators (bloggers, forums posters, artists) to monitize their content.
-* HTML5 standards compliant convention (official inclusion to the HTML standard is pending).
+* An Open source Google Chrome extension.
+* Completely Decentralized. All tips move directly from tipper to tipee with no middleman.
+* Alternate way for content creators (bloggers, forums posters, artists) to monetize their content.
+* HTML5 standards compliant (official inclusion to the HTML standard is [pending](https://github.com/priestc/Autotip/issues/1)).
 * works for Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
 * is configurable to be sent automatically on each pageload, or only by prompt.
 
