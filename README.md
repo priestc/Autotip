@@ -53,26 +53,26 @@ You can also use altcoin addresses:
 
     <meta name="microtip" content="Lb78JDGxMcih1gs3AirMeRW6jaG5V9hwFZ" data-currency='ltc'>
 
-# Multiple tipping addresses per page
+## Multiple tipping addresses per page
 
 The standard also permits the use of multiple tip addresses. In the case that the extension finds
 multiple tip addresses, the tip gets split amoung each address equally.
 
 Currently, this extension does not support sending tips to altcoin addresses, but support is planned.
 
-# Full meta tag specification
+## Full meta tag specification
 
 The following attributes are associated with the meta tag specification:
 
-| attribute      | required | description |
+| Attribute      |          | Description |
 |----------------|----------|-------------|
 | name           | required | always "microtip"
 | content        | required | The private key of the cryptocurrency address of the person who will recieve tips.
 | data-currency  | optional | The name of the currency. Examples: `BTC`, `LTC`, also you can write the whole name of the curency, such as "dogecoin", and "peercoin". Case insensitive. If left blank, `btc` is implied.
 | data-recipient | optional | Human readable name of the person who will revieve the tips. Can be a person's name or just "Development team". The purpose of this field is to be shown to the tipping user at the time of making the tip.
-| data-ratio   |  optional | Only applicable if there are multiple microtip tags on a single page. This attribute tells the tiping extension how much of the tip should go to this address. The value should be a decimal number between 0 and 1.0.
+| data-ratio   |  optional | Only applicable if there are multiple microtip tags on a single page. This attribute tells the tiping extension how much of the tip should go to this address. The value should be a decimal number between 0 and 1.0. All ratio values must add up to less than or equal to 1.0.
 
-# Examples
+## Examples
 
 One single Litecoin address, all going to the "Development Team" wallet address.
 
