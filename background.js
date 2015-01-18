@@ -1,3 +1,70 @@
+function unspent_outputs_insight(pub_key) {
+    // get unspent outputs from bitpay insight
+    var outputs = [];
+    $.ajax({
+        url: "https://insight.bitpay.com/api/addr/" + pub_key + "/utxo?noCache=1",
+        type: "get",
+        async: false,
+        success: function(response) {
+            $.each(response, function(index, output) {
+                outputs.push({
+                    "txid": output['txid'],
+                    "vout": output['vout'],
+                    "address": pub_key,
+                    "scriptPubKey": output['scriptPubKey'],
+                    "amount":  output['amount']
+                });
+            });
+        }
+    });
+    return outputs
+}
+
+function unspent_outputs(pub_key) {
+    // get unspent outputs from blockr.io
+    var outputs = [];
+    $.ajax({
+        url: "http://btc.blockr.io/api/v1/address/unspent/" + pub_key,
+        type: "get",
+        async: false,
+        success: function(response) {
+            console.log('called blockrio: found', response['data']['unspent'].length, "inputs");
+            var utxos_from_blockrio = response['data']['unspent'];
+            $.each(utxos_from_blockrio, function(index, utxo) {
+                outputs.push({
+                    "txid": utxo['tx'],
+                    "vout": utxo['n'],
+                    "address": pub_key,
+                    "scriptPubKey": utxo['script'],
+                    "amount":  utxo['amount']
+                });
+            });
+        }
+    });
+    return outputs
+}
+
+function get_shift_address(pub_key, tip_address, currency) {
+    // Call shapeshift.io to get a 'shift address' that will convert bitcoin
+    // to an altcoin address (passed in as currency).
+    var ssio_address;
+    $.ajax({
+        url: "https://shapeshift.io/shift",
+        type: "post",
+        async: false,
+        data: {
+            withdrawal: tip_address,
+            pair: "btc_" + currency,
+            returnAddress: pub_key
+        },
+        success: function(response) {
+            ssio_address = response.deposit;
+        }
+    });
+    return ssio_address
+}
+
+
 function send_tips(tips, autotip) {
     chrome.storage.sync.get({
         daily_limit_start: 'none',
@@ -67,98 +134,77 @@ function send_tips(tips, autotip) {
 
             console.log('called winkdex: ', cents_per_btc / 100, 'USD/BTC');
 
-            $.get("http://btc.blockr.io/api/v1/address/unspent/" + pub_key, function(response) {
-                console.log('called blockrio: found', response['data']['unspent'].length, "inputs");
+            var all_utxos = unspent_outputs_insight(pub_key);
+            var utxos = [];
+            var total_amount = 0;
+            $.each(all_utxos, function(index, utxo) {
+                // loop through each unspent output until we get enough to cover the cost of this tip.
+                if(total_amount < satoshi_amount) {
+                    utxos.push(new Transaction.UnspentOutput(utxo));
+                    total_amount += utxo['amount'];
+                } else {
+                    return false;
+                }
+            });
 
-                var utxos_from_blockrio = response['data']['unspent'];
-                var utxos = [];
-                var total_amount = 0;
-                $.each(utxos_from_blockrio, function(index, utxo) {
-                    // loop through each unspent output until we get enough to cover the cost of this tip.
-                    if(total_amount < satoshi_amount) {
-                        utxos.push(
-                            new Transaction.UnspentOutput({
-                                "txid": utxo['tx'],
-                                "vout": utxo['n'],
-                                "address": pub_key,
-                                "scriptPubKey": utxo['script'],
-                                "amount":  utxo['amount']
-                            })
-                        );
-                        total_amount += utxo['amount'];
-                    } else {
-                        return false;
-                    }
-                });
+            if(total_amount < btc_amount) {
+                console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
+                console.log("Needed: ", btc_amount ,"you only have: ", total_amount);
+                return
+            }
 
-                if(total_amount < btc_amount) {
-                    console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
-                    console.log("Needed: ", btc_amount ,"you only have: ", total_amount);
+            var added_to_tx = [];
+            var tx = new Transaction().from(utxos).change(pub_key);
+            $.each(tips, function(index, tip) {
+                if(autotip && all_tipped_addresses_today.indexOf(tip.address) >= 0) {
+                    console.log("Already tipped this address today " + all_tipped_addresses_today);
                     return
                 }
+                var this_tip_amount = Math.floor(satoshi_amount / tips.length);
+                currency = clean_currency(tip.currency);
 
-                var added_to_tx = [];
-                var tx = new Transaction().from(utxos).change(pub_key);
-                $.each(tips, function(index, tip) {
-                    if(autotip && all_tipped_addresses_today.indexOf(tip.address) >= 0) {
-                        console.log("Already tipped this address today " + all_tipped_addresses_today);
-                        return
-                    }
-                    var this_tip_amount = Math.floor(satoshi_amount / tips.length);
-                    currency = clean_currency(tip.currency);
-
-                    if(currency == 'btc') {
-                        tx = tx.to(Address.fromString(tip.address), this_tip_amount);
-                        added_to_tx.push(tip.address);
-                        console.log('Added', tip.address, "to transaction at", this_tip_amount);
-                    } else if(currency){
-                        // call shapeshift.io to convert the bitcoin tip to altcoin
-                        var ssio_address;
-                        $.ajax({
-                           url: "https://shapeshift.io/shift",
-                           type: "post",
-                           async: false,
-                           data: {
-                               withdrawal: tip.address,
-                               pair: "btc_" + currency,
-                               returnAddress: pub_key
-                           },
-                           success: function(response) {
-                               console.log("response from ssio:", response);
-                               ssio_address = response.deposit;
-                           }
-                        });
-                        tx = tx.to(Address.fromString(ssio_address), this_tip_amount);
-                        added_to_tx.push(tip.address);
-                        console.log('Added', ssio_address, "to transaction at", this_tip_amount, "(shapeshift)");
-                    } else {
-                        console.log("Unknown currency (not supported by shapeshift.io)", tip.currency);
-                    }
-                });
-
-                if(added_to_tx.length == 0) {
-                    console.log("Skipping as there are no recipients");
-                    return
+                if(currency == 'btc') {
+                    tx = tx.to(Address.fromString(tip.address), this_tip_amount);
+                    added_to_tx.push(tip.address);
+                    console.log('Added', tip.address, "to transaction at", this_tip_amount);
+                } else if(currency){
+                    // call shapeshift.io to convert the bitcoin tip to altcoin
+                    var ssio_address = get_shift_address(pub_key, tip.address, currency);
+                    added_to_tx.push(tip.address);
+                    console.log('Added', ssio_address, "to transaction at", this_tip_amount, "(shapeshift)");
+                } else {
+                    console.log("Unknown currency (not supported by shapeshift.io)", tip.currency);
                 }
+            });
 
-                console.log("tx made", tx.sign(priv_key).serialize());
-                $.post("https://btc.blockr.io/api/v1/tx/push", {hex: tx.sign(priv_key).serialize()}, function(response) {
-                    console.log("Pushed transaction successfully. Tipped so far today:", new_accumulation);
+            if(added_to_tx.length == 0) {
+                console.log("Skipping as there are no recipients");
+                return
+            }
 
-                    $.each(added_to_tx, function(index, address) {
-                        // mark each address as having been sent to for today
-                        all_tipped_addresses_today.push(address);
-                    });
-                    chrome.storage.sync.set({
-                        usd_tipped_so_far_today: new_accumulation,
-                        all_tipped_addresses_today: all_tipped_addresses_today
-                    });
+            cents_per_btc;
+            var satoshi_fee = Math.floor(0.005 / cents_per_btc * 100 * 100000000); // half cent fee
+            var tx_hex = tx.fee(satoshi_fee).sign(priv_key).serialize();
 
-                    if(items.beep_on_tip) {
-                        var audio = new Audio(chrome.extension.getURL("beep.wav"));
-                        audio.play();
-                    }
+            console.log("Using fee of", satoshi_fee, "Satoshis");
+            console.log("Pushing tx:", tx_hex);
+
+            $.post("https://btc.blockr.io/api/v1/tx/push", {hex: tx_hex}, function(response) {
+                console.log("Pushed transaction successfully. Tipped so far today:", new_accumulation.toFixed(2));
+
+                $.each(added_to_tx, function(index, address) {
+                    // mark each address as having been sent to for today
+                    all_tipped_addresses_today.push(address);
                 });
+                chrome.storage.sync.set({
+                    usd_tipped_so_far_today: new_accumulation,
+                    all_tipped_addresses_today: all_tipped_addresses_today
+                });
+
+                if(items.beep_on_tip) {
+                    var audio = new Audio(chrome.extension.getURL("beep.wav"));
+                    audio.play();
+                }
             });
         });
     });
@@ -184,7 +230,7 @@ function clean_currency(currency) {
         return 'ppc';
     }
     if(ll == 'bc' || ll == 'blackcoin') {
-        return 'rdd';
+        return 'bc';
     }
     if(ll == 'drk' || ll == 'darkcoin') {
         return 'drk';
