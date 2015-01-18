@@ -170,6 +170,7 @@ function send_tips(tips, autotip) {
                 } else if(currency){
                     // call shapeshift.io to convert the bitcoin tip to altcoin
                     var ssio_address = get_shift_address(pub_key, tip.address, currency);
+                    tx = tx.to(Address.fromString(ssio_address), this_tip_amount);
                     added_to_tx.push(tip.address);
                     console.log('Added', ssio_address, "to transaction at", this_tip_amount, "(shapeshift)");
                 } else {
@@ -183,7 +184,7 @@ function send_tips(tips, autotip) {
             }
 
             cents_per_btc;
-            var satoshi_fee = Math.floor(0.005 / cents_per_btc * 100 * 100000000); // half cent fee
+            var satoshi_fee = Math.floor(0.01 / cents_per_btc * 100 * 100000000); // one cent fee
             var tx_hex = tx.fee(satoshi_fee).sign(priv_key).serialize();
 
             console.log("Using fee of", satoshi_fee, "Satoshis");
