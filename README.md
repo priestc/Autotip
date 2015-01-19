@@ -100,6 +100,7 @@ To see some pages with these meta tags, checkout these test pages (all addreses 
 This extension uses the following APIs:
 
 * [Bitcore](http://bitcore.io) - creating transactions, generating the deposit address
-* [Blockr.io](http://blockr.io) - getting unspent outputs, pushing raw transaction to the network
+* [Blockr.io](http://blockr.io) - pushing raw transaction to the network
+* [Bitpay Insight](https://insight.bitpay.com/) - getting unspent outputs.
 * [Winkdex](https://winkdex.com) - getting current exchange rate
 * [Blockchain.info](http://blockchain.info) - getting balance of an address.

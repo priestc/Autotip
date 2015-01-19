@@ -102,6 +102,9 @@ function send_tips(tips, autotip) {
                 daily_limit_start: now_timestamp,
                 all_tipped_addresses_today: []
             });
+            daily_limit_start = now_timestamp;
+            usd_tipped_so_far_today = 0;
+            all_tipped_addresses_today = [];
         } else {
             var new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
             if(new_accumulation <= daily_tip_limit) {
@@ -153,6 +156,15 @@ function send_tips(tips, autotip) {
                 return
             }
 
+            var total_ratio = 0, ratio_verified = false;
+            $.each(tips, function(index, tip) {
+                // verify that all tip ratios add up to less than 1.0
+                total_ratio += tip.ratio;
+            });
+            if(total_ratio <= 1.0) {
+                ratio_verified = true;
+            }
+
             var added_to_tx = [];
             var tx = new Transaction().from(utxos).change(pub_key);
             $.each(tips, function(index, tip) {
@@ -160,9 +172,13 @@ function send_tips(tips, autotip) {
                     console.log("Already tipped this address today " + all_tipped_addresses_today);
                     return
                 }
-                var this_tip_amount = Math.floor(satoshi_amount / tips.length);
-                currency = clean_currency(tip.currency);
 
+                var this_tip_amount = Math.floor(satoshi_amount / tips.length);
+                if(ratio_verified && tip.ratio) {
+                    this_tip_amount = Math.floor(satoshi_amount * tip.ratio);
+                }
+
+                var currency = clean_currency(tip.currency);
                 if(currency == 'btc') {
                     tx = tx.to(Address.fromString(tip.address), this_tip_amount);
                     added_to_tx.push(tip.address);
@@ -183,7 +199,6 @@ function send_tips(tips, autotip) {
                 return
             }
 
-            cents_per_btc;
             var satoshi_fee = Math.floor(0.01 / cents_per_btc * 100 * 100000000); // one cent fee
             var tx_hex = tx.fee(satoshi_fee).sign(priv_key).serialize();
 
@@ -255,6 +270,9 @@ function get_icon_for_currency(currency) {
     }
     if(cleaned == 'doge') {
         return chrome.extension.getURL('dogecoin-128.png');
+    }
+    if(cleaned == 'ppc') {
+        return chrome.extension.getURL('gold-peercoin-250.png');
     }
 }
 
