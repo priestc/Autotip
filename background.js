@@ -152,14 +152,16 @@ function send_tips(tips, autotip) {
 
             if(total_amount < btc_amount) {
                 console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
-                console.log("Needed: ", btc_amount ,"you only have: ", total_amount);
+                console.log("Needed: ", btc_amount, "you only have:", total_amount);
                 return
             }
 
             var total_ratio = 0, ratio_verified = false;
             $.each(tips, function(index, tip) {
                 // verify that all tip ratios add up to less than 1.0
-                total_ratio += tip.ratio;
+                if(tip.ratio > 0 && tip.ratio <= 1.0) {
+                    total_ratio += tip.ratio;
+                }
             });
             if(total_ratio <= 1.0) {
                 ratio_verified = true;
