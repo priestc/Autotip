@@ -36,7 +36,8 @@ chrome.tabs.query({
                     recipient = "<big>" + tip.recipient + " (" + ratio + ")</big><br>";
                 }
 
-                var tip_html = recipient + "<small>" + tip.address + "</small><br><br>"
+                var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
+                var tip_html = recipient + img + "<small>" + tip.address + "</small><br><br>";
                 $("#tip_address").append(tip_html);
             });
         });
