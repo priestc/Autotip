@@ -4,7 +4,8 @@
         <title>Autotip Options</title>
         <style>
             #container {
-                width: 40%;
+                width: 50%;
+                min-width: 500px;
                 background: #dfdfdf;
                 border: 1px solid #888888;
                 padding: 10px;
@@ -17,21 +18,22 @@
         <div id="container">
             <span id="status" style="color: red"></span>
 
-            <h1>Autotip Options</h1>
+            <h1><img src="autotip-logo-128.png" style="vertical-align: middle"> Autotip Options</h1>
 
             <h2>Tip amount</h2>
-            <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
+            $ <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
             <br><small>This amount gets sent to each page you elect to tip. If there are multiple
             tip addresses, this amount will get split up amongst each address.</small>
 
             <h2>Daily tip limit</h2>
-            <input type="text" name="daily_tip_limit" style="width: 3em"> USD
-            <small>All autotipping will cease when total tips sent adds up to this amount.
+            $ <input type="text" name="daily_tip_limit" style="width: 3em"> USD
+            <br><small>All autotipping will cease when total tips sent adds up to this amount.
             The count resets every 24 hours.</small>
 
             <h2>When to tip</h2>
             <input type="radio" name="when_to_send" value="immediately">Tip immediately without asking.<br>
             <input type="radio" name="when_to_send" value="ask">Only tip when I do so from the popup.<br>
+            <br>
             <input type="checkbox" name="one_per_address"> Limit to one tip per address per day when auto tipping.<br>
             <input type="checkbox" name="beep_on_tip"> Beep after making a tip.<br>
 

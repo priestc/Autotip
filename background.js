@@ -303,12 +303,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         var tab_id = sender.tab.id;
         chrome.pageAction.show(tab_id);
 
-        $.each(request.found_tips, function(index, tip) {
-            // set the tip icon based on the last tip's currency
-            chrome.pageAction.setIcon({
-                tabId: tab_id,
-                path: get_icon_for_currency(tip.currency)
-            });
+
+        chrome.pageAction.setIcon({
+            tabId: tab_id,
+            path: chrome.extension.getURL('autotip-logo-38.png')
         });
 
         chrome.storage.sync.get({
