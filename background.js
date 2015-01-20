@@ -161,6 +161,8 @@ function send_tips(tips, autotip) {
                 // verify that all tip ratios add up to less than 1.0
                 if(tip.ratio > 0 && tip.ratio <= 1.0) {
                     total_ratio += tip.ratio;
+                } else {
+                    tip.ratio = satoshi_amount / tips.length;
                 }
             });
             if(total_ratio <= 1.0) {
