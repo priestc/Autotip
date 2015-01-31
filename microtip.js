@@ -26,6 +26,6 @@ chrome.storage.sync.get({
         console.log("found " + tips.length + " microtips on this page");
     } else if(items.when_to_send == 'immediately') {
         // go ahead and make the tip automatically.
-        chrome.runtime.sendMessage({found_tips: tips, perform_tip: 'immediately'});
+        chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
     }
 });

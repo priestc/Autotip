@@ -187,30 +187,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             tabId: tab_id,
             path: chrome.extension.getURL('autotip-logo-38.png')
         });
-
-        chrome.storage.sync.get({
-            when_to_send: 'ask',
-        }, function(items) {
-            if(items.when_to_send == '5min') {
-                // TODO: wait for 5 minutes, then prompt the user.
-            } else if (items.when_to_send == 'immediately') {
-                send_tips(request.found_tips, true);
-            } else if (items.when_to_send == 'ask') {
-                // popup will open when icon is clicked
-                // that popup will send the tip
-                // save for when the popup needs them.
-                tip_addresses[tab_id] = request.found_tips;
-            }
-        });
+        tip_addresses[tab_id] = request.found_tips;
     }
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false);
+        send_tips(request.tips, false, sendResponse);
         return
     }
 
-    if(request.perform_tip == 'immediately') {
+    if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
         send_tips(request.tips, true, sendResponse);
         return
