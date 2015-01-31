@@ -2,19 +2,19 @@
 
 Autotip is:
 
+* A decentralized cryptocurrency microtipping platform.
 * An Open source Google Chrome extension.
-* Completely Decentralized. All tips move directly from tipper to tipee with no middleman.
+* All tips move directly from tipper to tipee with no middleman. (No account required)
 * Alternate way for content creators (bloggers, forums posters, artists) to monetize their content.
 * HTML5 standards compliant (official inclusion to the HTML standard is [pending](https://github.com/priestc/Autotip/issues/1)).
-* works for Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
-* is configurable to be sent automatically on each pageload, or only by prompt.
+* A system where you can reiceve Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
 
 This project written for the Miami Bitcoin hackathon on January 9-10, 2015.
 
 ## Setup for tippers
 
 Search for Autotip in the chrome extension store. Once you've installed it, open up the
-extensions page by navigating to chrome:extensions:
+extensions page by navigating to `chrome://extensions`:
 
 ![screenshot](http://i.imgur.com/8IkKdBK.png?1)
 

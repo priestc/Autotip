@@ -69,6 +69,7 @@ function send_tips(tips, autotip) {
             var satoshi_amount = btc_amount * 100000000;
 
             console.log('called winkdex: ', cents_per_btc / 100, 'USD/BTC');
+            console.log("this page will get:", satoshi_amount, "satoshis (", btc_amount, "BTC)");
 
             var all_utxos = unspent_outputs_insight(pub_key);
             var utxos = [];
@@ -95,11 +96,12 @@ function send_tips(tips, autotip) {
                 if(tip.ratio > 0 && tip.ratio <= 1.0) {
                     total_ratio += tip.ratio;
                 } else {
-                    tip.ratio = satoshi_amount / tips.length;
+                    tip.ratio = 1 / tips.length;
                 }
             });
             if(total_ratio <= 1.0) {
                 ratio_verified = true;
+                console.log("using ratios found on page (verified)");
             }
 
             var added_to_tx = [];
