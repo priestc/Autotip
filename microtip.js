@@ -12,8 +12,20 @@ function get_tips() {
     return tips_on_this_page
 }
 
-var tips = get_tips();
-if(tips.length > 0) {
-    chrome.runtime.sendMessage({found_tips: tips});
-    console.log("found " + tips.length + " microtips on this page");
-}
+chrome.storage.sync.get({
+    when_to_send: 'ask',
+}, function(items) {
+    var tips = get_tips();
+    if(tips.length <= 0) {
+        return // No tips found
+    }
+
+    if(items.when_to_send == 'ask') {
+        // Prime the popup for manual tip
+        chrome.runtime.sendMessage({found_tips: tips});
+        console.log("found " + tips.length + " microtips on this page");
+    } else if(items.when_to_send == 'immediately') {
+        // go ahead and make the tip automatically.
+        chrome.runtime.sendMessage({found_tips: tips, perform_tip: 'immediately'});
+    }
+});

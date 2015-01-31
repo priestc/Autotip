@@ -14,13 +14,14 @@ chrome.tabs.query({
             daily_tip_limit: 0.5,
             dollar_tip_amount: 0.05,
             all_tipped_addresses_today: [],
+            when_to_send: 'ask',
         }, function(items) {
 
             $('#status').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
 
             $("#now").click(function() {
                 // when the 'tip now' buton is clicked, tell the background to send the tips.
-                chrome.runtime.sendMessage({perform_tip: "manual", tips: tips}, function(response) {
+                chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips}, function(response) {
                     // when all tips have been sent, log so the user knows.
                     console.log("sent " + tips.length + " tips!");
                 });
@@ -28,16 +29,17 @@ chrome.tabs.query({
 
             $.each(tips, function(index, tip) {
                 var ratio = "100%";
+                var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
                 var recipient = "";
+
                 if(tip.ratio) {
                     ratio = Number(tip.ratio * 100).toFixed(1) + "%";
                 }
                 if(tip.recipient) {
-                    recipient = "<big>" + tip.recipient + " (" + ratio + ")</big><br>";
+                    recipient = "<big>" + tip.recipient + " (" + ratio + ")</big>";
                 }
 
-                var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
-                var tip_html = recipient + img + "<small>" + tip.address + "</small><br><br>";
+                var tip_html = "<table><tr><td>" + img + "</td><td>" + recipient + "<br><small>" + tip.address + "</small></td></tr></table>";
                 $("#tip_address").append(tip_html);
             });
         });

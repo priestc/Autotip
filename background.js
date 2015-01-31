@@ -1,4 +1,11 @@
-function send_tips(tips, autotip) {
+function send_tips(tips, autotip, responseFunction) {
+    // Make the bitcoin transaction and push it to the network.
+    // * The first argument is a list of addresses and the corresponding ratio
+    // * The second argument is a boolean determining if this tip is being sent
+    // via manual or automatically.
+    // * The third argument is a function that corresponds to chrome's message system
+    // that returns the status of this tip to the popup.
+
     chrome.storage.sync.get({
         daily_limit_start: 'none',
         usd_tipped_so_far_today: 0,
@@ -39,21 +46,12 @@ function send_tips(tips, autotip) {
             usd_tipped_so_far_today = 0;
             all_tipped_addresses_today = [];
         } else {
+            // Make sure the
             var new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
-            if(new_accumulation <= daily_tip_limit) {
-                // not over the limit
-            } else if (autotip) {
-                // over the limit, do not tip
-                cancel_tip = true;
-                cancel_reason = "Over daily limit: " + usd_tipped_so_far_today;
-            } else {
-                // we are over the limit, but its a manual tip, so we let it through
+            if(new_accumulation > daily_tip_limit && autotip) {
+                console.log("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
+                return
             }
-        }
-
-        if(cancel_tip) {
-            console.log("Cancelled tip: ", cancel_reason);
-            return
         }
 
         console.log("Interval start:", new Date(daily_limit_start * 1000));
@@ -160,6 +158,8 @@ function send_tips(tips, autotip) {
                     var audio = new Audio(chrome.extension.getURL("beep.wav"));
                     audio.play();
                 }
+
+                responseFunction('tips sent');
             });
         });
     });
@@ -171,14 +171,8 @@ var tip_addresses = [];
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // dispatches all messages
 
-    if(request.perform_tip) {
-        // user clicked the "tip now" button
-        send_tips(request.tips, false);
-        return
-    }
-
     if(request.get_tips) {
-        // the popup's js needs the tips for that page.
+        // the popup's js needs the tips for displaying on that page.
         sendResponse({tips: tip_addresses[request.tab]});
         return
     }
@@ -188,7 +182,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
         var tab_id = sender.tab.id;
         chrome.pageAction.show(tab_id);
-
 
         chrome.pageAction.setIcon({
             tabId: tab_id,
@@ -209,5 +202,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 tip_addresses[tab_id] = request.found_tips;
             }
         });
+    }
+
+    if(request.perform_tip == 'manual') {
+        // user clicked the "tip now" button
+        send_tips(request.tips, false);
+        return
+    }
+
+    if(request.perform_tip == 'immediately') {
+        // autotip is enabled and we found some tips.
+        send_tips(request.tips, true, sendResponse);
+        return
     }
 });
