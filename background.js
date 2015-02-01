@@ -122,7 +122,7 @@ function send_tips(tips, autotip, responseFunction) {
                 console.log('Added', tip.address, "to transaction at", this_tip_amount);
             } else if(currency) {
                 // call shapeshift.io to convert the bitcoin tip to altcoin
-                if(num_of_shapeshifts > 1) {
+                if(num_of_shapeshifts >= 1) {
                     console.log("Canceling recipient because Shapeshift.io's code has a bug that doesn't allow for multiple deposits for a single transactions")
                     return
                 }
