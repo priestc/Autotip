@@ -111,3 +111,16 @@ function get_shift_address(deposit_address, tip_address, currency) {
     });
     return ssio_address
 }
+
+function get_price_from_winkdex() {
+    var cents_per_btc;
+    $.ajax({
+        url: "https://winkdex.com/api/v0/price",
+        typr: 'get',
+        async: false,
+        success: function(response) {
+            cents_per_btc = response['price'];
+        }
+    });
+    return cents_per_btc
+}
