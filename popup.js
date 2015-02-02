@@ -1,6 +1,10 @@
 setTimeout(function(){
 
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        if(request.popup_timer) {
+            $('#now').val(request.popup_timer);
+            return
+        }
         if(request.popup_status) {
             $('#status').text(request.popup_status);
             return
@@ -30,10 +34,14 @@ setTimeout(function(){
 
                 $("#now").click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
+
+                    chrome.runtime.sendMessage({end_5min_timer: true});
+
                     chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips}, function(response) {
                         // when all tips have been sent, log so the user knows.
                         console.log("sent " + tips.length + " tips!");
                     });
+
                 });
 
                 $.each(tips, function(index, tip) {

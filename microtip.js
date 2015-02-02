@@ -36,17 +36,19 @@ chrome.storage.sync.get({
                 clearInterval(intervalID);
             } else {
                 var msg = "Sending tip in " + seconds_to_go + " Seconds"
-                chrome.runtime.sendMessage({popup_status: msg});
+                chrome.runtime.sendMessage({popup_timer: msg});
             }
         }, 1000);
     } else if(items.when_to_send == 'immediately') {
         // go ahead and make the tip automatically.
         chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
     }
-});
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if(request.end_5min_timer) {
-        clearInterval(intervalID);
-    }
+    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        console.log("content script got message");
+        if(request.end_5min_timer) {
+            clearInterval(intervalID);
+        }
+    });
+
 });

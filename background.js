@@ -31,8 +31,7 @@ function send_tips(tips, autotip, responseFunction) {
         ///// determine if we make the tip, or cancel the tip
         /////////////////////////////////////////////////////
 
-        var cancel_tip = false;
-        var cancel_reason = '';
+        var new_accumulation = 0;
 
         if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
             // it was over a day ago since we've been keeping track, reset the interval
@@ -47,7 +46,7 @@ function send_tips(tips, autotip, responseFunction) {
             all_tipped_addresses_today = [];
         } else {
             // Make sure the
-            var new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
+            new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
             if(new_accumulation > daily_tip_limit && autotip) {
                 console.log("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
                 return
@@ -60,6 +59,8 @@ function send_tips(tips, autotip, responseFunction) {
         /////////////////////////////////////////////////////
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
+
+        chrome.runtime.sendMessage({popup_status: "Creating Transaction..."});
 
         var cents_per_btc = get_price_from_winkdex();
         var btc_amount = dollar_tip_amount / cents_per_btc * 100;
@@ -163,7 +164,7 @@ function send_tips(tips, autotip, responseFunction) {
                 audio.play();
             }
 
-            responseFunction('tips sent');
+            chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
         });
     });
 }
