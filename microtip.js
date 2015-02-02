@@ -20,10 +20,25 @@ chrome.storage.sync.get({
         return // No tips found
     }
 
-    if(items.when_to_send == 'ask') {
-        // Prime the popup for manual tip
-        chrome.runtime.sendMessage({found_tips: tips});
-        console.log("found " + tips.length + " microtips on this page");
+    console.log("found " + tips.length + " microtips on this page");
+    chrome.runtime.sendMessage({found_tips: tips});
+
+    if(items.when_to_send == '5mins') {
+        var five_minute_counter_start = new Date()
+        var intervalID = setInterval(function() {
+            // update popup status every 1 second. After 5 minutes, make the tip
+            var seconds_to_go = Math.floor((5 * 60) - ((new Date() - five_minute_counter_start) / 1000));
+            if(seconds_to_go <= 0) {
+                chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
+                console.log('5 minutes past, tip made');
+                clearInterval(intervalID);
+            } else {
+                var msg = "Sending tip in " + seconds_to_go + " Seconds"
+                chrome.runtime.sendMessage({popup_status: msg});
+                console.log(msg);
+
+            }
+        }, 1000);
     } else if(items.when_to_send == 'immediately') {
         // go ahead and make the tip automatically.
         chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});

@@ -179,7 +179,6 @@ function set_icon(tab_id) {
 }
 
 var tip_addresses = [];
-
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // dispatches all messages
 
@@ -206,8 +205,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
         send_tips(request.tips, true, sendResponse);
-        var tab_id = sender.tab.id;
-        set_icon(tab_id);
         return
     }
 });

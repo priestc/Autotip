@@ -1,5 +1,13 @@
 setTimeout(function(){
 
+    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        if(request.popup_status) {
+            $('#status').text(request.popup_status);
+            return
+        }
+    });
+
+    // delay this popup creation process until the chrome popup fade-in effect has finished.
     chrome.tabs.query({
         active: true,
         currentWindow: true
@@ -18,8 +26,7 @@ setTimeout(function(){
                 all_tipped_addresses_today: [],
                 when_to_send: 'ask',
             }, function(items) {
-
-                $('#status').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
+                $('#tipping_stats').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
 
                 $("#now").click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
