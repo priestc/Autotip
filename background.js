@@ -14,7 +14,8 @@ function send_tips(tips, autotip, responseFunction) {
         priv_key: 'none',
         dollar_tip_amount: 0.05,
         all_tipped_addresses_today: [],
-        beep_on_tip: true
+        beep_on_tip: true,
+        one_per_address: true
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -101,19 +102,17 @@ function send_tips(tips, autotip, responseFunction) {
             console.log("using ratios found on page (verified)");
         }
 
+        var total_tip_amount_satoshi = 0;
         var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
         var added_to_tx = [];
         var tx = new Transaction().from(utxos).change(pub_key);
         $.each(tips, function(index, tip) {
-            if(autotip && all_tipped_addresses_today.indexOf(tip.address) >= 0) {
+            if(autotip && one_per_address && all_tipped_addresses_today.indexOf(tip.address) >= 0) {
                 console.log("Already tipped this address today " + all_tipped_addresses_today);
                 return
             }
 
-            var this_tip_amount = Math.floor(satoshi_amount / tips.length);
-            if(ratio_verified && tip.ratio) {
-                this_tip_amount = Math.floor(satoshi_amount * tip.ratio);
-            }
+            var this_tip_amount = Math.floor(satoshi_amount * tip.ratio);
 
             var currency = clean_currency(tip.currency);
             if(currency == 'btc') {
@@ -133,7 +132,10 @@ function send_tips(tips, autotip, responseFunction) {
                 num_of_shapeshifts += 1;
             } else {
                 console.log("Unknown currency (not supported by shapeshift.io)", tip.currency);
+                return
             }
+
+            total_tip_amount_satoshi += this_tip_amount;
         });
 
         if(added_to_tx.length == 0) {
@@ -148,14 +150,15 @@ function send_tips(tips, autotip, responseFunction) {
         console.log("Pushing tx:", tx_hex);
 
         $.post("https://btc.blockr.io/api/v1/tx/push", {hex: tx_hex}, function(response) {
-            console.log("Pushed transaction successfully. Tipped so far today:", new_accumulation.toFixed(2));
+            var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e11;
+            console.log("Pushed transaction successfully. Tipped so far today:", total_tip_amount_dollar.toFixed(2));
 
             $.each(added_to_tx, function(index, address) {
                 // mark each address as having been sent to for today
                 all_tipped_addresses_today.push(address);
             });
             chrome.storage.sync.set({
-                usd_tipped_so_far_today: new_accumulation,
+                usd_tipped_so_far_today: total_tip_amount_satoshi,
                 all_tipped_addresses_today: all_tipped_addresses_today
             });
 
