@@ -1,3 +1,5 @@
+var intervalID;
+
 function get_tips() {
     var tips_on_this_page = [];
     $("meta[name=microtip]").each(function(index, element) {
@@ -25,7 +27,7 @@ chrome.storage.sync.get({
 
     if(items.when_to_send == '5mins') {
         var five_minute_counter_start = new Date()
-        var intervalID = setInterval(function() {
+        intervalID = setInterval(function() {
             // update popup status every 1 second. After 5 minutes, make the tip
             var seconds_to_go = Math.floor((5 * 60) - ((new Date() - five_minute_counter_start) / 1000));
             if(seconds_to_go <= 0) {
@@ -35,12 +37,16 @@ chrome.storage.sync.get({
             } else {
                 var msg = "Sending tip in " + seconds_to_go + " Seconds"
                 chrome.runtime.sendMessage({popup_status: msg});
-                console.log(msg);
-
             }
         }, 1000);
     } else if(items.when_to_send == 'immediately') {
         // go ahead and make the tip automatically.
         chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
+    }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if(request.end_5min_timer) {
+        clearInterval(intervalID);
     }
 });

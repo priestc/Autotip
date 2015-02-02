@@ -65,8 +65,7 @@ function send_tips(tips, autotip, responseFunction) {
         var btc_amount = dollar_tip_amount / cents_per_btc * 100;
         var satoshi_amount = btc_amount * 100000000;
 
-        console.log('called winkdex: ', cents_per_btc / 100, 'USD/BTC');
-        console.log("this page will get:", satoshi_amount, "satoshis (", btc_amount, "BTC)");
+        console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
 
         var all_utxos = unspent_outputs_insight(pub_key);
         var utxos = [];
