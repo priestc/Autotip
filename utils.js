@@ -112,34 +112,6 @@ function get_shift_address(deposit_address, tip_address, currency) {
     return ssio_address;
 }
 
-var cents_per_btc, btc_price_fetch_date;
-function get_price_from_winkdex() {
-    // Makes a call to the winkdex to get the current price for bitcoin
-    // only one call is made every three hours. the value is cached in chrome's
-    // local storage.
-
-    var age_hours;
-    if(cents_per_btc) {
-        var age_hours = (new Date() - btc_price_fetch_date) / 3600000; // 3 hours in miliseconds
-    }
-
-    if(!age_hours || age_hours > 3) {
-        $.ajax({
-            url: "https://winkdex.com/api/v0/price",
-            type: 'get',
-            async: false,
-            success: function(response) {
-                cents_per_btc = response['price'];
-            }
-        });
-        btc_price_fetch_date = new Date();
-        console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
-    } else {
-        console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
-    }
-    return cents_per_btc;
-}
-
 function normalize_ratios(tips) {
     // Make sure the ratios included with each tip checks out.
     // If they do not check out, ratios are reset to 1/length for each.

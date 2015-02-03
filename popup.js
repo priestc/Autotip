@@ -44,22 +44,24 @@ setTimeout(function(){
                     chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips});
                 });
 
-                var btc_price = get_price_from_winkdex();
-                normalize_ratios(tips);
+                chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
+                    var btc_price = response.price;
+                    normalize_ratios(tips);
 
-                $.each(tips, function(index, tip) {
-                    var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
-                    var recipient = "";
-                    var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
-                    
-                    if(tip.recipient) {
-                        recipient = "<big>" + tip.recipient + " (" + ratio + ")</big>";
-                    }
-                    var dollar_ratio = dollar_tip_amount * tip.ratio;
-                    var satoshis = Math.floor(dollar_ratio / btc_price * 1e10)
-                    var tip_html = "<table class='tip_table'><tr><td>" + img + "</td><td>" + recipient + "<br><small>"
-                     + tip.address + "</small></td><td>$" + dollar_ratio.toFixed(2) + "<br>(" + satoshis + ")</td></tr></table>";
-                    $("#tip_address").append(tip_html);
+                    $.each(tips, function(index, tip) {
+                        var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
+                        var recipient = "";
+                        var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
+
+                        if(tip.recipient) {
+                            recipient = "<big>" + tip.recipient + " (" + ratio + ")</big>";
+                        }
+                        var dollar_ratio = dollar_tip_amount * tip.ratio;
+                        var satoshis = Math.floor(dollar_ratio / btc_price * 1e10)
+                        var tip_html = "<table class='tip_table'><tr><td>" + img + "</td><td>" + recipient + "<br><small>"
+                         + tip.address + "</small></td><td>$" + dollar_ratio.toFixed(2) + "<br>(" + satoshis + ")</td></tr></table>";
+                        $("#tip_address").append(tip_html);
+                    });
                 });
             });
         });
