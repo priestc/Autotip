@@ -139,3 +139,25 @@ function get_price_from_winkdex() {
     }
     return cents_per_btc;
 }
+
+function normalize_ratios(tips) {
+    // Make sure the ratios included with each tip checks out.
+    // If they do not check out, ratios are reset to 1/length for each.
+    var total_ratio = 0;
+    $.each(tips, function(index, tip) {
+        // verify that all tip ratios add up to less than 1.0
+        if(tip.ratio > 0 && tip.ratio <= 1.0) {
+            total_ratio += tip.ratio;
+        } else {
+            tip.ratio = 1 / tips.length;
+        }
+    });
+    if(total_ratio <= 1.0) {
+        console.log("using ratios found on page (verified)");
+    } else {
+        console.log("ratios invalid, resetting all to 1/length");
+        $.each(tips, function(index, tip) {
+            tip.ratio = 1 / tips.length;
+        });
+    }
+}

@@ -86,8 +86,6 @@ function send_tips(tips, autotip, responseFunction) {
             if(total_amount < satoshi_amount) {
                 utxos.push(new Transaction.UnspentOutput(utxo));
                 total_amount += utxo['amount'];
-            } else {
-                return false;
             }
         });
 
@@ -97,19 +95,7 @@ function send_tips(tips, autotip, responseFunction) {
             return
         }
 
-        var total_ratio = 0, ratio_verified = false;
-        $.each(tips, function(index, tip) {
-            // verify that all tip ratios add up to less than 1.0
-            if(tip.ratio > 0 && tip.ratio <= 1.0) {
-                total_ratio += tip.ratio;
-            } else {
-                tip.ratio = 1 / tips.length;
-            }
-        });
-        if(total_ratio <= 1.0) {
-            ratio_verified = true;
-            console.log("using ratios found on page (verified)");
-        }
+        normalize_ratios(tips);
 
         var total_tip_amount_satoshi = 0;
         var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
@@ -117,7 +103,7 @@ function send_tips(tips, autotip, responseFunction) {
         var tx = new Transaction().from(utxos).change(pub_key);
         $.each(tips, function(index, tip) {
             if(autotip && one_per_address && all_tipped_addresses_today.indexOf(tip.address) >= 0) {
-                console.log("Already tipped this address today " + all_tipped_addresses_today);
+                console.log("Already tipped this address today:", all_tipped_addresses_today);
                 return
             }
 

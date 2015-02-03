@@ -31,32 +31,34 @@ setTimeout(function(){
                 when_to_send: 'ask',
             }, function(items) {
                 $('#tipping_stats').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
+                var dollar_tip_amount = items.dollar_tip_amount;
 
-                $("#now").click(function() {
+                if(tips.length == 1) {
+                    var button_text = "Send $" + dollar_tip_amount + " to this address";
+                } else {
+                    var button_text = "Send $" + dollar_tip_amount + " to these " + tips.length + " addresses";
+                }
+                $("#tip_button").val(button_text).click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
-
                     chrome.runtime.sendMessage({end_5min_timer: true});
-
-                    chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips}, function(response) {
-                        // when all tips have been sent, log so the user knows.
-                        console.log("sent " + tips.length + " tips!");
-                    });
-
+                    chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips});
                 });
 
+                var btc_price = get_price_from_winkdex();
+                normalize_ratios(tips);
+
                 $.each(tips, function(index, tip) {
-                    var ratio = "100%";
                     var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
                     var recipient = "";
-
-                    if(tip.ratio) {
-                        ratio = Number(tip.ratio * 100).toFixed(1) + "%";
-                    }
+                    var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
+                    
                     if(tip.recipient) {
                         recipient = "<big>" + tip.recipient + " (" + ratio + ")</big>";
                     }
-
-                    var tip_html = "<table><tr><td>" + img + "</td><td>" + recipient + "<br><small>" + tip.address + "</small></td></tr></table>";
+                    var dollar_ratio = dollar_tip_amount * tip.ratio;
+                    var satoshis = Math.floor(dollar_ratio / btc_price * 1e10)
+                    var tip_html = "<table class='tip_table'><tr><td>" + img + "</td><td>" + recipient + "<br><small>"
+                     + tip.address + "</small></td><td>$" + dollar_ratio.toFixed(2) + "<br>(" + satoshis + ")</td></tr></table>";
                     $("#tip_address").append(tip_html);
                 });
             });
