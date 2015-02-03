@@ -1,3 +1,12 @@
+function reset_interval() {
+    // for testing and debugging
+    chrome.storage.sync.set({
+        usd_tipped_so_far_today: 0,
+        daily_limit_start: new Date().getTime(),
+        all_tipped_addresses_today: []
+    });
+}
+
 function send_tips(tips, autotip, responseFunction) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
@@ -25,7 +34,7 @@ function send_tips(tips, autotip, responseFunction) {
         var daily_tip_limit = items.daily_tip_limit;
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
 
-        var now_timestamp = new Date().getTime() / 1000;
+        var now_timestamp = new Date().getTime();
         var day_ago_timestamp = now_timestamp - (60 * 60 * 24);
 
         /////////////////////////////////////////////////////
@@ -36,7 +45,7 @@ function send_tips(tips, autotip, responseFunction) {
 
         if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
             // it was over a day ago since we've been keeping track, reset the interval
-            console.log("Resetting interval now. Old interval started:", new Date(daily_limit_start * 1000))
+            console.log("Resetting interval now. Old interval started:", new Date(daily_limit_start))
             chrome.storage.sync.set({
                 usd_tipped_so_far_today: 0,
                 daily_limit_start: now_timestamp,
@@ -46,7 +55,7 @@ function send_tips(tips, autotip, responseFunction) {
             usd_tipped_so_far_today = 0;
             all_tipped_addresses_today = [];
         } else {
-            // Make sure the
+            // Make sure this tip isn't going to put us over the daily tipping limit
             new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
             if(new_accumulation > daily_tip_limit && autotip) {
                 console.log("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
@@ -54,7 +63,7 @@ function send_tips(tips, autotip, responseFunction) {
             }
         }
 
-        console.log("Interval start:", new Date(daily_limit_start * 1000));
+        console.log("Interval start:", new Date(daily_limit_start));
         console.log("All addresses today:", all_tipped_addresses_today)
 
         /////////////////////////////////////////////////////
@@ -143,22 +152,24 @@ function send_tips(tips, autotip, responseFunction) {
             return
         }
 
-        var satoshi_fee = Math.floor(0.01 / cents_per_btc * 100 * 100000000); // one cent fee
+        var satoshi_fee = Math.floor(0.01 / cents_per_btc * 1e10); // one cent fee
         var tx_hex = tx.fee(satoshi_fee).sign(priv_key).serialize();
 
         console.log("Using fee of", satoshi_fee, "Satoshis");
         console.log("Pushing tx:", tx_hex);
 
         $.post("https://btc.blockr.io/api/v1/tx/push", {hex: tx_hex}, function(response) {
-            var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e11;
-            console.log("Pushed transaction successfully. Tipped so far today:", total_tip_amount_dollar.toFixed(2));
+            var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e10;
+            var new_dollar_tip_amount_today = total_tip_amount_dollar + usd_tipped_so_far_today;
+
+            console.log("Pushed transaction successfully. Tipped so far today: $", new_dollar_tip_amount_today.toFixed(2));
 
             $.each(added_to_tx, function(index, address) {
                 // mark each address as having been sent to for today
                 all_tipped_addresses_today.push(address);
             });
             chrome.storage.sync.set({
-                usd_tipped_so_far_today: total_tip_amount_satoshi,
+                usd_tipped_so_far_today: new_dollar_tip_amount_today,
                 all_tipped_addresses_today: all_tipped_addresses_today
             });
 
