@@ -6,8 +6,15 @@ setTimeout(function(){
             return
         }
         if(request.popup_status) {
-            $('#status').text(request.popup_status);
-            return
+            var s = $('#status');
+
+            if(request.fail) {
+                s.css({background: 'darkred', color: 'white'});
+                s.html("<strong>Error:</strong><br>" + request.popup_status);
+            } else {
+                s.css({background: 'lightgreen', color: 'black'});
+                s.text(request.popup_status);
+            }
         }
     });
 
@@ -23,12 +30,12 @@ setTimeout(function(){
             var tips = response.tips;
 
             chrome.storage.sync.get({
-                daily_limit_start: 'none',
-                usd_tipped_so_far_today: 0,
-                daily_tip_limit: 0.5,
-                dollar_tip_amount: 0.05,
-                all_tipped_addresses_today: [],
-                when_to_send: 'immediately',
+                daily_limit_start: null,
+                usd_tipped_so_far_today: null,
+                daily_tip_limit: null,
+                dollar_tip_amount: null,
+                all_tipped_addresses_today: null,
+                when_to_send: null,
             }, function(items) {
                 $('#tipping_stats').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
                 var dollar_tip_amount = items.dollar_tip_amount;
@@ -40,6 +47,8 @@ setTimeout(function(){
                 }
                 $("#tip_button").val(button_text).click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
+                    // and prime the status box.
+                    $('#status').show().text("Creating Transaction...").css({background: 'lightgreen', color: 'black'});
                     chrome.runtime.sendMessage({end_5min_timer: true});
                     chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips});
                 });

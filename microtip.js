@@ -15,7 +15,7 @@ function get_tips() {
 }
 
 chrome.storage.sync.get({
-    when_to_send: 'immediately',
+    when_to_send: null,
 }, function(items) {
     var tips = get_tips();
     if(tips.length <= 0) {

@@ -1,3 +1,32 @@
+chrome.storage.sync.get({
+    when_to_send: 'immediately',  //'ask', 'immediately', '5mins'
+    dollar_tip_amount: 0.05,
+    daily_tip_limit: 0.50,
+    pub_key: 'none',
+    priv_key: 'none',
+    one_per_address: true,
+    beep_on_tip: false,
+}, function(items) {
+    if(items.pub_key == 'none' && items.priv_key == 'none') {
+        //if keys have not been generated, do so now and save them.
+        // this code only gets called when the extension first gets installed.
+
+        var key = new PrivateKey();
+        items.pub_key = key.toAddress().toString();
+        items.priv_key = key.toWIF();
+        chrome.storage.sync.set({
+            when_to_send: 'immediately',  //'ask', 'immediately', '5mins'
+            dollar_tip_amount: 0.05,
+            daily_tip_limit: 0.50,
+            pub_key: items.pub_key,
+            priv_key: items.priv_key,
+            one_per_address: true,
+            beep_on_tip: false,
+        });
+    }
+});
+
+
 var cents_per_btc, btc_price_fetch_date;
 function get_price_from_winkdex() {
     // Makes a call to the winkdex to get the current price for bitcoin
@@ -19,11 +48,16 @@ function get_price_from_winkdex() {
             }
         });
         btc_price_fetch_date = new Date();
-        console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+        //console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
     } else {
-        console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
+        //console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
     }
     return cents_per_btc;
+}
+
+function cancel_tip(msg) {
+    console.log("Tip Canceled!: " + msg);
+    chrome.runtime.sendMessage({popup_status: msg, fail: true});
 }
 
 function reset_interval() {
@@ -44,15 +78,15 @@ function send_tips(tips, autotip, responseFunction) {
     // that returns the status of this tip to the popup.
 
     chrome.storage.sync.get({
-        daily_limit_start: 'none',
-        usd_tipped_so_far_today: 0,
-        daily_tip_limit: 0.5,
-        pub_key: 'none',
-        priv_key: 'none',
-        dollar_tip_amount: 0.05,
+        daily_limit_start: null,
+        usd_tipped_so_far_today: null,
+        daily_tip_limit: null,
+        pub_key: null,
+        priv_key: null,
+        dollar_tip_amount: null,
         all_tipped_addresses_today: [],
-        beep_on_tip: false,
-        one_per_address: true
+        beep_on_tip: null,
+        one_per_address: null
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -61,6 +95,7 @@ function send_tips(tips, autotip, responseFunction) {
         var daily_limit_start = items.daily_limit_start;
         var daily_tip_limit = items.daily_tip_limit;
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
+        var one_per_address = items.one_per_address;
 
         var now_timestamp = new Date().getTime();
         var day_ago_timestamp = now_timestamp - (60 * 60 * 24);
@@ -73,7 +108,7 @@ function send_tips(tips, autotip, responseFunction) {
 
         if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
             // it was over a day ago since we've been keeping track, reset the interval
-            console.log("Resetting interval now. Old interval started:", new Date(daily_limit_start))
+            console.log("Resetting daily interval now. Old interval started:", new Date(daily_limit_start))
             chrome.storage.sync.set({
                 usd_tipped_so_far_today: 0,
                 daily_limit_start: now_timestamp,
@@ -86,7 +121,7 @@ function send_tips(tips, autotip, responseFunction) {
             // Make sure this tip isn't going to put us over the daily tipping limit
             new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
             if(new_accumulation > daily_tip_limit && autotip) {
-                console.log("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
+                cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
                 return
             }
         }
@@ -98,11 +133,13 @@ function send_tips(tips, autotip, responseFunction) {
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        chrome.runtime.sendMessage({popup_status: "Creating Transaction..."});
+        //chrome.runtime.sendMessage({popup_status: "Creating Transaction..."});
 
         var cents_per_btc = get_price_from_winkdex();
         var btc_amount = dollar_tip_amount / cents_per_btc * 100;
         var satoshi_amount = btc_amount * 100000000;
+
+        var satoshi_fee = Math.floor(0.01 / cents_per_btc * 1e10); // one cent fee
 
         console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
 
@@ -111,15 +148,14 @@ function send_tips(tips, autotip, responseFunction) {
         var total_amount = 0;
         $.each(all_utxos, function(index, utxo) {
             // loop through each unspent output until we get enough to cover the cost of this tip.
-            if(total_amount < satoshi_amount) {
+            if(total_amount < satoshi_amount + satoshi_fee) {
                 utxos.push(new Transaction.UnspentOutput(utxo));
                 total_amount += utxo['amount'];
             }
         });
 
         if(total_amount < btc_amount) {
-            console.log("Canceling tip because not enough unspent outputs. Deposit more bitcoin.");
-            console.log("Needed: ", btc_amount, "you only have:", total_amount);
+            cancel_tip("Needed: " + btc_amount.toFixed(8) + " you only have: " + total_amount.toFixed(8));
             return
         }
 
@@ -166,33 +202,40 @@ function send_tips(tips, autotip, responseFunction) {
             return
         }
 
-        var satoshi_fee = Math.floor(0.01 / cents_per_btc * 1e10); // one cent fee
         var tx_hex = tx.fee(satoshi_fee).sign(priv_key).serialize();
 
         console.log("Using fee of", satoshi_fee, "Satoshis");
         console.log("Pushing tx:", tx_hex);
 
-        $.post("https://btc.blockr.io/api/v1/tx/push", {hex: tx_hex}, function(response) {
-            var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e10;
-            var new_dollar_tip_amount_today = total_tip_amount_dollar + usd_tipped_so_far_today;
+        $.ajax({
+            url: "https://btc.blockr.io/api/v1/tx/push",
+            type: 'post',
+            data: {hex: tx_hex},
+            success: function(response) {
+                var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e10;
+                var new_dollar_tip_amount_today = total_tip_amount_dollar + usd_tipped_so_far_today;
 
-            console.log("Pushed transaction successfully. Tipped so far today: $", new_dollar_tip_amount_today.toFixed(2));
+                console.log("Pushed transaction successfully. Tipped so far today: $", new_dollar_tip_amount_today.toFixed(2));
 
-            $.each(added_to_tx, function(index, address) {
-                // mark each address as having been sent to for today
-                all_tipped_addresses_today.push(address);
-            });
-            chrome.storage.sync.set({
-                usd_tipped_so_far_today: new_dollar_tip_amount_today,
-                all_tipped_addresses_today: all_tipped_addresses_today
-            });
+                $.each(added_to_tx, function(index, address) {
+                    // mark each address as having been sent to for today
+                    all_tipped_addresses_today.push(address);
+                });
+                chrome.storage.sync.set({
+                    usd_tipped_so_far_today: new_dollar_tip_amount_today,
+                    all_tipped_addresses_today: all_tipped_addresses_today
+                });
 
-            if(items.beep_on_tip) {
-                var audio = new Audio(chrome.extension.getURL("beep.wav"));
-                audio.play();
+                if(items.beep_on_tip) {
+                    var audio = new Audio(chrome.extension.getURL("beep.wav"));
+                    audio.play();
+                }
+
+                chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
+            },
+            error: function() {
+                cancel_tip("Pushtx failed");
             }
-
-            chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
         });
     });
 }

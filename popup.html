@@ -6,9 +6,11 @@
                 width: 400px;
             }
             #tip_button {
+                margin-top: 20px;
                 font-size: large;
                 color: white;
                 background: green;
+                cursor: pointer;
             }
             .tip_table {
                 width: 100%;
@@ -19,6 +21,11 @@
                 border: 0px solid gray;
                 font-size: small;
             }
+            #status {
+                padding: 10px;
+                margin: 10px;
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -27,6 +34,7 @@
             <div id="tipping_stats"></div>
             This site contains tip addresses:<br><br>
             <span id='tip_address'></span>
+            <input type="hidden">
             <input type="button" id="tip_button" value="">
             <div id="status"></div>
         </div>
