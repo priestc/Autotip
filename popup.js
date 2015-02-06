@@ -38,7 +38,8 @@ setTimeout(function(){
                 when_to_send: null,
                 pub_key: null,
             }, function(items) {
-
+                $("#qr").qrcode({width: 100, height: 100, text: items.pub_key});
+                
                 var dollar_tip_amount = items.dollar_tip_amount;
 
                 if(tips.length == 1) {
@@ -64,7 +65,6 @@ setTimeout(function(){
                         msg += "<br><strong>$" + deposit_usd + "</strong> Remaining on deposit address";
                         $('#tipping_stats').html(msg);
                         $('#tipping_stats .spinner').hide();
-                        $("#qr").qrcode({width: 100, height: 100, text: items.pub_key});
                     });
 
                     normalize_ratios(tips);
