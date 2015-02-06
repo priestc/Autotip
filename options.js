@@ -39,6 +39,7 @@ function restore_options() {
         $('input[name=daily_tip_limit]').val(Number(items.daily_tip_limit).toFixed(2));
         $("#priv_key").text(items.priv_key);
         $('#deposit_address').text(items.pub_key);
+        $("#qr").qrcode({width: 300, height: 300, text: items.pub_key});
 
         if(items.one_per_address) {
             $('input[name=one_per_address]').attr('checked', 'checked');

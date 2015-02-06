@@ -39,6 +39,7 @@
             <input type="checkbox" name="beep_on_tip"> Beep after making a tip.<br>
 
             <h2>Deposit Address</h2>
+            <div id="qr"></div>
             Public Key: <strong id="deposit_address"></strong> <br>
             Private Key: <span id="priv_key"></span> <br>
             Balance: <span id="current_balance"><img src="spinner.gif"></span>
@@ -50,6 +51,7 @@
 
         <script src="bitcore.browser.min.js"></script>
         <script src="jquery-2.1.3.min.js"></script>
+        <script src="jquery.qrcode.min.js"></script>
         <script src="options.js"></script>
     </body>
 </html>
