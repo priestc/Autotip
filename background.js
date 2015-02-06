@@ -51,7 +51,7 @@ function send_tips(tips, autotip, responseFunction) {
         priv_key: 'none',
         dollar_tip_amount: 0.05,
         all_tipped_addresses_today: [],
-        beep_on_tip: true,
+        beep_on_tip: false,
         one_per_address: true
     }, function(items) {
         var pub_key = items.pub_key;
@@ -196,7 +196,6 @@ function send_tips(tips, autotip, responseFunction) {
         });
     });
 }
-
 
 function set_icon(tab_id) {
     chrome.pageAction.show(tab_id);

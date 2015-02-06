@@ -26,13 +26,13 @@ function save_options() {
 function restore_options() {
     // These are default values
     chrome.storage.sync.get({
-        when_to_send: 'ask',
+        when_to_send: 'immediately',  //'ask', 'immediately', '5mins'
         dollar_tip_amount: 0.05,
         daily_tip_limit: 0.50,
         pub_key: 'none',
         priv_key: 'none',
         one_per_address: true,
-        beep_on_tip: true,
+        beep_on_tip: false,
     }, function(items) {
         if(items.pub_key == 'none' && items.priv_key == 'none') {
             //if keys have not been generated, do so now and save them.

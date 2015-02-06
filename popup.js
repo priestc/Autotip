@@ -28,7 +28,7 @@ setTimeout(function(){
                 daily_tip_limit: 0.5,
                 dollar_tip_amount: 0.05,
                 all_tipped_addresses_today: [],
-                when_to_send: 'ask',
+                when_to_send: 'immediately',
             }, function(items) {
                 $('#tipping_stats').text("Tipped so far today: $" + items.usd_tipped_so_far_today.toFixed(2));
                 var dollar_tip_amount = items.dollar_tip_amount;
