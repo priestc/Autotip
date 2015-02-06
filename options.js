@@ -52,7 +52,7 @@ function restore_options() {
             $.get("https://winkdex.com/api/v0/price", function(response) {
                 var cents_per_btc = response['price'];
                 var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
-                $('#current_balance').text(balance + " BTC (" + fiat_amount +" USD)" ); //replace spinner
+                $('#current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
             });
         });
     });

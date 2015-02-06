@@ -26,13 +26,29 @@
                 margin: 10px;
                 display: none;
             }
+            #tipping_stats {
+                margin: 15px 0 15px 0;
+                padding: 5px;
+                background: #f2f2f2;
+            }
+            #qr-container{
+                width: 100px;
+            }
+            #deposit-adress {
+                width: 200px;
+            }
         </style>
     </head>
     <body>
-        <h1>Autotip</h1>
+        <table style="width:100%">
+            <tr>
+                <td><h1>Autotip</h1></td>
+                <td id="deposit-address"></td>
+                <td id="qr-container"><div id="qr"></div></td>
+            </tr>
+        </table>
         <div id="popup_container">
-            <div id="tipping_stats"></div>
-            This site contains tip addresses:<br><br>
+            <div id="tipping_stats"><img src="spinner.gif"></div>
             <span id='tip_address'></span>
             <input type="hidden">
             <input type="button" id="tip_button" value="">
@@ -40,6 +56,7 @@
         </div>
         <script src="jquery-2.1.3.min.js"></script>
         <script src="utils.js"></script>
+        <script src="jquery.qrcode.min.js"></script>
         <script src="popup.js"></script>
     </body>
 </html>
