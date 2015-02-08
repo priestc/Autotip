@@ -98,7 +98,7 @@ function send_tips(tips, autotip, responseFunction) {
         var one_per_address = items.one_per_address;
 
         var now_timestamp = new Date().getTime();
-        var day_ago_timestamp = now_timestamp - (60 * 60 * 24);
+        var day_ago_timestamp = now_timestamp - (60 * 60 * 24 * 1000);
 
         /////////////////////////////////////////////////////
         ///// determine if we make the tip, or cancel the tip

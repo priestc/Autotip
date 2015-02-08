@@ -39,7 +39,7 @@ setTimeout(function(){
                 pub_key: null,
             }, function(items) {
                 $("#qr").qrcode({width: 100, height: 100, text: items.pub_key});
-                
+
                 var dollar_tip_amount = items.dollar_tip_amount;
 
                 if(tips.length == 1) {
@@ -50,6 +50,7 @@ setTimeout(function(){
                 $("#tip_button").val(button_text).click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
                     // and prime the status box.
+                    $(this).attr('disabled', 'disabled');
                     $('#status').show().text("Creating Transaction...").css({background: 'lightgreen', color: 'black'});
                     chrome.runtime.sendMessage({end_5min_timer: true});
                     chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips});
