@@ -1,27 +1,58 @@
 chrome.storage.sync.get({
-    when_to_send: 'immediately',  //'ask', 'immediately', '5mins'
-    dollar_tip_amount: 0.05,
-    daily_tip_limit: 0.50,
-    pub_key: 'none',
-    priv_key: 'none',
-    one_per_address: true,
-    beep_on_tip: false,
+    pub_key: null,
+    priv_key: null,
+    when_to_send: null,
+    dollar_tip_amount: null,
+    daily_tip_limit: null,
+    one_per_address: null,
+    beep_on_tip: null,
+    blacklist_or_whitelist: null,
+    domain_list: null
 }, function(items) {
-    if(items.pub_key == 'none' && items.priv_key == 'none') {
-        //if keys have not been generated, do so now and save them.
+    if(!items.pub_key || !items.priv_key) {
+        // if keys have not been generated, do so now and save them.
         // this code only gets called when the extension first gets installed.
-
         var key = new PrivateKey();
         items.pub_key = key.toAddress().toString();
         items.priv_key = key.toWIF();
         chrome.storage.sync.set({
-            when_to_send: 'immediately',  //'ask', 'immediately', '5mins'
-            dollar_tip_amount: 0.05,
-            daily_tip_limit: 0.50,
             pub_key: items.pub_key,
             priv_key: items.priv_key,
-            one_per_address: true,
-            beep_on_tip: false,
+        });
+    }
+    if(!items.when_to_send) {
+        chrome.storage.sync.set({
+            when_to_send: 'immediately'  //'ask', 'immediately', '5mins'
+        });
+    }
+    if(!items.dollar_tip_amount) {
+        chrome.storage.sync.set({
+            dollar_tip_amount: 0.05
+        });
+    }
+    if(!items.daily_tip_limit) {
+        chrome.storage.sync.set({
+            daily_tip_limit: 0.5
+        });
+    }
+    if(!items.one_per_address) {
+        chrome.storage.sync.set({
+            one_per_address: true
+        });
+    }
+    if(!items.beep_on_tip) {
+        chrome.storage.sync.set({
+            beep_on_tip: false
+        });
+    }
+    if(!items.blacklist_or_whitelist) {
+        chrome.storage.sync.set({
+            blacklist_or_whitelist: 'blacklist' // 'none', 'whitelist' or 'blacklist'
+        });
+    }
+    if(!items.domain_list) {
+        chrome.storage.sync.set({
+            domain_list: ['somethingawful.com']
         });
     }
 });
@@ -30,8 +61,7 @@ chrome.storage.sync.get({
 var cents_per_btc, btc_price_fetch_date;
 function get_price_from_winkdex() {
     // Makes a call to the winkdex to get the current price for bitcoin
-    // only one call is made every three hours. the value is cached in chrome's
-    // local storage.
+    // only one call is made every three hours. the value is cached.
 
     var age_hours;
     if(cents_per_btc) {

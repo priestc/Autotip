@@ -12,13 +12,22 @@
                 margin-left: auto;
                 margin-right: auto;
             }
+            .save_button {
+                font-size: large;
+                background-color: #91F3A8;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .status {
+                color: red;
+            }
         </style>
     </head>
     <body>
         <div id="container">
-            <span id="status" style="color: red"></span>
-
             <h1><img src="autotip-logo-128.png" style="vertical-align: middle"> Autotip Options</h1>
+
+            <input type="button" class="save_button" value="Save Options"> <span class="status"></span>
 
             <h2>Tip amount</h2>
             $ <input type="text" name="dollar_tip_amount" style="width: 3em"> USD
@@ -31,12 +40,22 @@
             The count resets every 24 hours.</small>
 
             <h2>Tipping Mode</h2>
-            <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking immediately upon page load.<br>
-            <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for 5 minutes.<br>
+            <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking <strong>immediately</strong> upon page load.<br>
+            <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for a certain .<br>
             <input type="radio" name="when_to_send" value="ask">Never Tip automatically. Only tip when I do so from the popup.<br>
             <br>
             <input type="checkbox" name="one_per_address"> Limit to one tip per address per day when auto tipping.<br>
             <input type="checkbox" name="beep_on_tip"> Beep after making a tip.<br>
+
+            <h2>Whitelist/Blacklist</h2>
+            <input type="radio" name="blacklist_or_whitelist" value="none"> Allow tips on every domain.<br>
+            <input type="radio" name="blacklist_or_whitelist" value="whitelist"> Use Whitelist<br>
+            <input type="radio" name="blacklist_or_whitelist" value="blacklist"> Use Blacklist
+
+            <h3>Domains</h3>
+            <textarea name="domains" cols="100" rows="8" id="domain_list_textarea"></textarea><br>
+            <small>Seperate domain one per line. If you checked "use whitelist" above, <i>only</i> these domains
+            will ever be autotipped. If you checked "use blacklist", these domains will <i>never</i> get autotipped.</small>
 
             <h2>Deposit Address</h2>
             <div id="qr"></div>
@@ -46,7 +65,7 @@
 
             <br><br>
 
-            <input type="button" id="save" value="Save">
+            <input type="button" class="save_button" value="Save Options"> <span class="status"></span>
         </div>
 
         <script src="bitcore.browser.min.js"></script>
