@@ -10,13 +10,18 @@ function save_options() {
     var domain_list_text = $("#domain_list_textarea").val();
     var domain_list = domain_list_text.trim().split('\n');
 
+    var interval_seconds = $("input[name=interval_seconds]").val();
+    var miner_fee = $("input[name=miner_fee]").val();
+
     chrome.storage.sync.set({
         when_to_send: when_to_send,
         dollar_tip_amount: dollar_tip_amount,
         daily_tip_limit: daily_tip_limit,
         one_per_address: one_per_address,
         blacklist_or_whitelist: blacklist_or_whitelist,
-        domain_list: domain_list
+        domain_list: domain_list,
+        interval_seconds: interval_seconds,
+        miner_fee: miner_fee
     }, function() {
         // Update status to let user know options were saved.
         var status = $('.status').text('Options saved.');
@@ -39,12 +44,17 @@ function fill_in_options() {
         one_per_address: null,
         beep_on_tip: null,
         blacklist_or_whitelist: null,
-        domain_list: null
+        domain_list: null,
+        interval_seconds: null,
+        miner_fee: null
     }, function(items) {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=blacklist_or_whitelist][value=' + items.blacklist_or_whitelist + ']').attr('checked', 'checked');
         $('input[name=dollar_tip_amount]').val(items.dollar_tip_amount);
         $('input[name=daily_tip_limit]').val(Number(items.daily_tip_limit).toFixed(2));
+        $('input[name=interval_seconds]').val(items.interval_seconds);
+        $('input[name=miner_fee]').val(items.miner_fee);
+
         $("#priv_key").text(items.priv_key);
         $('#deposit_address').text(items.pub_key);
         $("#qr").qrcode({width: 300, height: 300, text: items.pub_key});

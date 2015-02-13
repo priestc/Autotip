@@ -16,13 +16,15 @@ function get_tips() {
 
 chrome.storage.sync.get({
     when_to_send: null,
+    blacklist_or_whitelist: null,
+    domain_list: null
 }, function(items) {
     var tips = get_tips();
     if(tips.length <= 0) {
         return // No tips found
     }
 
-    console.log("found " + tips.length + " microtips on this page");
+    console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
     chrome.runtime.sendMessage({found_tips: tips});
 
     if(items.when_to_send == '5mins') {

@@ -7,7 +7,9 @@ chrome.storage.sync.get({
     one_per_address: null,
     beep_on_tip: null,
     blacklist_or_whitelist: null,
-    domain_list: null
+    domain_list: null,
+    interval_seconds: null,
+    miner_fee: null
 }, function(items) {
     if(!items.pub_key || !items.priv_key) {
         // if keys have not been generated, do so now and save them.
@@ -53,6 +55,16 @@ chrome.storage.sync.get({
     if(!items.domain_list) {
         chrome.storage.sync.set({
             domain_list: ['somethingawful.com']
+        });
+    }
+    if(!items.interval_seconds) {
+        chrome.storage.sync.set({
+            interval_seconds: 300
+        });
+    }
+    if(!items.miner_fee) {
+        chrome.storage.sync.set({
+            miner_fee: 0.01
         });
     }
 });

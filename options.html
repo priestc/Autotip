@@ -21,6 +21,9 @@
             .status {
                 color: red;
             }
+            input[type=number] {
+                width: 3em;
+            }
         </style>
     </head>
     <body>
@@ -39,9 +42,12 @@
             <br><small>All autotipping will cease when total tips sent adds up to this amount.
             The count resets every 24 hours.</small>
 
+            <h2>Miner's Fee</h2>
+            $ <input type="text" name="miner_fee" style="width: 3em"> USD
+
             <h2>Tipping Mode</h2>
             <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking <strong>immediately</strong> upon page load.<br>
-            <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for a certain .<br>
+            <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for <input type="number" name="interval_seconds"> seconds.<br>
             <input type="radio" name="when_to_send" value="ask">Never Tip automatically. Only tip when I do so from the popup.<br>
             <br>
             <input type="checkbox" name="one_per_address"> Limit to one tip per address per day when auto tipping.<br>
