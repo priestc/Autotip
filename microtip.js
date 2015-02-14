@@ -17,7 +17,8 @@ function get_tips() {
 chrome.storage.sync.get({
     when_to_send: null,
     blacklist_or_whitelist: null,
-    domain_list: null
+    domain_list: null,
+    interval_seconds: null
 }, function(items) {
     var tips = get_tips();
     if(tips.length <= 0) {
@@ -31,7 +32,7 @@ chrome.storage.sync.get({
         var five_minute_counter_start = new Date()
         intervalID = setInterval(function() {
             // update popup status every 1 second. After 5 minutes, make the tip
-            var seconds_to_go = Math.floor((5 * 60) - ((new Date() - five_minute_counter_start) / 1000));
+            var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - five_minute_counter_start) / 1000));
             if(seconds_to_go <= 0) {
                 chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
                 console.log('5 minutes past, tip made');
