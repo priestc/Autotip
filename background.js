@@ -128,7 +128,8 @@ function send_tips(tips, autotip, responseFunction) {
         dollar_tip_amount: null,
         all_tipped_addresses_today: [],
         beep_on_tip: null,
-        one_per_address: null
+        one_per_address: null,
+        miner_fee: null
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -138,6 +139,7 @@ function send_tips(tips, autotip, responseFunction) {
         var daily_tip_limit = items.daily_tip_limit;
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
         var one_per_address = items.one_per_address;
+        var miner_fee_cents = items.miner_fee;
 
         var now_timestamp = new Date().getTime();
         var day_ago_timestamp = now_timestamp - (60 * 60 * 24 * 1000);
@@ -181,7 +183,7 @@ function send_tips(tips, autotip, responseFunction) {
         var btc_amount = dollar_tip_amount / cents_per_btc * 100;
         var satoshi_amount = btc_amount * 100000000;
 
-        var satoshi_fee = Math.floor(0.01 / cents_per_btc * 1e10); // one cent fee
+        var satoshi_fee = Math.floor(miner_fee_cents / cents_per_btc * 1e10);
 
         console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
 
