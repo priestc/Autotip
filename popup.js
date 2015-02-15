@@ -1,23 +1,24 @@
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log("received message in popup!!!", request);
+
+    if(request.popup_timer) {
+        $('#timer_area').text(request.popup_timer);
+        return
+    }
+    if(request.popup_status) {
+        var s = $('#status');
+
+        if(request.fail) {
+            s.css({background: 'darkred', color: 'white'});
+            s.html("<strong>Error:</strong><br>" + request.popup_status);
+        } else {
+            s.css({background: 'lightgreen', color: 'black'});
+            s.text(request.popup_status);
+        }
+    }
+});
+
 setTimeout(function(){
-
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if(request.popup_timer) {
-            $('#now').val(request.popup_timer);
-            return
-        }
-        if(request.popup_status) {
-            var s = $('#status');
-
-            if(request.fail) {
-                s.css({background: 'darkred', color: 'white'});
-                s.html("<strong>Error:</strong><br>" + request.popup_status);
-            } else {
-                s.css({background: 'lightgreen', color: 'black'});
-                s.text(request.popup_status);
-            }
-        }
-    });
-
     // delay this popup creation process until the chrome popup fade-in effect has finished.
     chrome.tabs.query({
         active: true,
@@ -26,6 +27,8 @@ setTimeout(function(){
         var tab_id = tabs[0].id;
         chrome.runtime.sendMessage({get_tips: true, tab: tab_id}, function(response) {
             // when the popup is launched, get list of tips found on the page
+
+            $("#whitelist_blacklist_button_area").show().append(response.button);
 
             var tips = response.tips;
 

@@ -5,8 +5,13 @@
             #popup_container {
                 width: 400px;
             }
+
             #tip_button {
                 margin-top: 20px;
+            }
+
+            .button {
+                margin-top: 10px;
                 font-size: large;
                 color: white;
                 background: green;
@@ -35,11 +40,31 @@
                 padding: 5px;
                 background: #f2f2f2;
             }
-            #qr-container{
+            #qr-container {
                 width: 100px;
             }
             #deposit-adress {
                 width: 200px;
+            }
+            #whitelist_blacklist_button_area {
+                display: none;
+            }
+            .blacklist {
+                background-color: black;
+                color: white;
+            }
+            .whitelist {
+                background-color: white;
+                color: black;
+            }
+            .remove {
+                color: red;
+            }
+            .add {
+                color: green;
+            }
+            #timer_area {
+                padding-top: 10px;
             }
         </style>
     </head>
@@ -55,8 +80,10 @@
             <div id="tipping_stats"><img src="spinner.gif"></div>
             <span id='tip_address'></span>
             <input type="hidden">
-            <input type="button" id="tip_button" value="">
+            <input type="button" id="tip_button" class="button" value="">
+            <div id="timer_area"></div>
             <div id="status"></div>
+            <div id="whitelist_blacklist_button_area"></div>
         </div>
         <script src="jquery-2.1.3.min.js"></script>
         <script src="utils.js"></script>

@@ -25,7 +25,7 @@ function pass_blacklist_and_whitelist(setting, domains, this_domain) {
     // this_domain: the domain that this page is on
     // returns: true or false, depending on whether this_domain passes or fails the black/whitelist
 
-    for(var i = 0; i < domains.length; i++){
+    for(var i = 0; i < domains.length; i++) {
         var domain = domains[i];
         if(domain == this_domain) {
             return setting == 'whitelist';
@@ -57,7 +57,16 @@ chrome.storage.sync.get({
 
     if(!pblwl) {
         console.log("Autotip canceled because of", items.blacklist_or_whitelist);
-        console.log(items.domain_list, window.location.host);
+        console.log(window.location.host, "->", items.domain_list);
+        chrome.runtime.sendMessage({
+            mode: 'blocked_by_' + items.blacklist_or_whitelist,
+            domain: window.location.host,
+        });
+    } else if(items.blacklist_or_whitelist != 'none') {
+        chrome.runtime.sendMessage({
+            mode: 'allowed_by_' + items.blacklist_or_whitelist,
+            domain: window.location.host,
+        });
     }
 
     console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
@@ -70,7 +79,7 @@ chrome.storage.sync.get({
             var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - five_minute_counter_start) / 1000));
             if(seconds_to_go <= 0) {
                 chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
-                console.log('5 minutes past, tip made');
+                console.log(items.interval_seconds, 'seconds past, will try to make tip.');
                 clearInterval(intervalID);
             } else {
                 var msg = "Sending tip in " + seconds_to_go + " Seconds";

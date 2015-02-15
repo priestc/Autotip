@@ -111,7 +111,7 @@ function reset_interval() {
     });
 }
 
-function send_tips(tips, autotip, responseFunction) {
+function send_tips(tips, autotip) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
@@ -292,7 +292,8 @@ function set_icon(tab_id) {
     });
 }
 
-var tip_addresses = [];
+var whitelist_blacklist_status = {};
+var tip_addresses = {};
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // dispatches all messages
 
@@ -303,8 +304,52 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.get_tips) {
         // the popup's js needs the tips for displaying on that page.
-        sendResponse({tips: tip_addresses[request.tab]});
-        return
+        // also send back a black/white listi button if applicable.
+
+        var tab_id = request.tab;
+        var data = whitelist_blacklist_status[tab_id];
+
+        var blocked, list, domain;
+        if(data) {
+            blocked = data[0];
+            list = data[1];
+            domain = data[2];
+        }
+
+        chrome.storage.sync.get({
+            blacklist_or_whitelist: null,
+        }, function(items) {
+            var button = '';
+            if(items.blacklist_or_whitelist == 'none') {
+                console.log("no blacklist or whitelist", request);
+            }
+            else if (blocked == 'blocked' && list == 'blacklist') {
+                console.log("blocked by blacklist");
+                var txt = 'Remove ' + domain + ' from blacklist';
+                button = '<input type="button" data-domain="' + domain + '" class="button blacklist remove" value="' + txt + '">';
+            }
+            else if(blocked == 'blocked' && list == 'whitelist') {
+                console.log("blocked by whitelist");
+                var txt = 'Add ' + domain + ' to whitelist';
+                button = '<input type="button" data-domain="' + domain + '" class="button whitelist add" value="' + txt + '">';
+            }
+            else if(blocked == 'allowed' && list == 'whitelist') {
+                console.log("allowed by whitelist");
+                var txt = 'Remove ' + domain + ' from whitelist';
+                button = '<input type="button" data-domain="' + domain + '" class="button whitelist remove" value="' + txt + '">';
+            }
+            else if(blocked == 'allowed' && list == 'blacklist') {
+                console.log("allowed by blacklist");
+                var txt = 'Add ' + domain + ' to blacklist';
+                button = '<input type="button" data-domain="' + domain + '" class="button blacklist add" value="' + txt + '">';
+            }
+            console.log(button);
+            sendResponse({
+                tips: tip_addresses[tab_id],
+                button: button,
+            });
+        });
+        return true; // indicate asynchronious response
     }
 
     if(request.found_tips) {
@@ -317,13 +362,35 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false, sendResponse);
+        send_tips(request.tips, false);
         return
     }
 
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
-        send_tips(request.tips, true, sendResponse);
+        send_tips(request.tips, true);
+        return
+    }
+    if(request.mode && request.domain) {
+        // this page's autotip was canceled because it was not in whitelist
+        // or it was in the blacklist. Record this fact so we can put the
+        // 'remove from blacklist', or 'add to whitelist' button.
+
+        var val;
+        var tab_id = sender.tab.id;
+        if(request.mode == 'blocked_by_whitelist') {
+            val = ['blocked', 'whitelist', request.domain];
+        }
+        if(request.mode == 'blocked_by_blacklist') {
+            val = ['blocked', 'blacklist', request.domain];
+        }
+        if(request.mode == 'allowed_by_whitelist') {
+            val = ['allowed', 'whitelist', request.domain];
+        }
+        if(request.mode == 'allowed_by_blacklist') {
+            val = ['allowed', 'blacklist', request.domain];
+        }
+        whitelist_blacklist_status[tab_id] = val;
         return
     }
 });
