@@ -30,6 +30,23 @@ setTimeout(function(){
 
             $("#whitelist_blacklist_button_area").show().append(response.button);
 
+            $(".remove, .add").on('click', function() {
+                console.log('clicked domain list button');
+                $(this).hide();
+                if($(this).hasClass('add')) {
+                    var add_or_remove = 'add'
+                } else {
+                    var add_or_remove = 'remove'
+                }
+
+                chrome.runtime.sendMessage({
+                    domain: $(this).data('domain'),
+                    add_or_remove: add_or_remove
+                });
+            });
+
+            $("#options_link").attr('href', chrome.extension.getURL("options.html"));
+
             var tips = response.tips;
 
             chrome.storage.sync.get({

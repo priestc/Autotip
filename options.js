@@ -9,6 +9,9 @@ function save_options() {
 
     var domain_list_text = $("#domain_list_textarea").val();
     var domain_list = domain_list_text.trim().split('\n');
+    if(domain_list[0] == "") {
+        domain_list.shift(); // bug in chrome storage?
+    }
 
     var interval_seconds = $("input[name=interval_seconds]").val();
     var miner_fee = $("input[name=miner_fee]").val();

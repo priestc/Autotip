@@ -321,7 +321,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }, function(items) {
             var button = '';
             if(items.blacklist_or_whitelist == 'none') {
-                console.log("no blacklist or whitelist", request);
+                //console.log("no blacklist or whitelist");
             }
             else if (blocked == 'blocked' && list == 'blacklist') {
                 console.log("blocked by blacklist");
@@ -343,7 +343,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 var txt = 'Add ' + domain + ' to blacklist';
                 button = '<input type="button" data-domain="' + domain + '" class="button blacklist add" value="' + txt + '">';
             }
-            console.log(button);
             sendResponse({
                 tips: tip_addresses[tab_id],
                 button: button,
@@ -392,5 +391,37 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
         whitelist_blacklist_status[tab_id] = val;
         return
+    }
+
+    if(request.add_or_remove && request.domain) {
+        // gets caled when the user clicks the black or white "remove from blacklist"
+        // button
+
+        var add_or_remove = request.add_or_remove;
+        var clicked_domain = request.domain;
+
+        chrome.storage.sync.get({
+            domain_list: null,
+        }, function(items) {
+            var domain_list = items.domain_list;
+
+            console.log('domain list is', domain_list);
+
+            if(add_or_remove == 'remove'){
+                var index = domain_list.indexOf(clicked_domain);
+                domain_list.splice(index, 1);
+                console.log("removed from domain list");
+
+            } else if(add_or_remove == 'add') {
+                domain_list.push(clicked_domain);
+                console.log("added to domain list");
+            }
+
+            console.log("setting new domain list", domain_list);
+            chrome.storage.sync.set({
+                domain_list: domain_list
+            });
+        });
+
     }
 });
