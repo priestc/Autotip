@@ -67,7 +67,7 @@ The following attributes are associated with the meta tag specification:
 | Attribute      |          | Description |
 |----------------|----------|-------------|
 | name           | required | always "microtip"
-| content        | required | The private key of the cryptocurrency address of the person who will recieve tips.
+| content        | required | The public key of the cryptocurrency address of the person who will recieve tips.
 | data-currency  | optional | The name of the currency. Examples: `BTC`, `LTC`, also you can write the whole name of the curency, such as "dogecoin", and "peercoin". Case insensitive. If left blank, `BTC` is implied.
 | data-recipient | optional | Human readable name of the person who will revieve the tips. Can be a person's name or just "Development team". The purpose of this field is to be shown to the tipping user at the time of making the tip.
 | data-ratio   |  optional | Only applicable if there are multiple microtip tags on a single page. This attribute tells the tiping extension how much of the tip should go to this address. The value should be a decimal number between 0 and 1.0. All ratio values must add up to less than or equal to 1.0.
