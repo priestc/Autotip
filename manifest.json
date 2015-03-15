@@ -22,7 +22,7 @@
         "storage",
         "tabs",
         "http://btc.blockr.io/",
-        "https://winkdex.com/",
+        "https://winkdex.com/"
     ],
     "web_accessible_resources": [
         "*.png", "*.jpg", "*.js"
