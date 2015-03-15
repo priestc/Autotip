@@ -206,7 +206,7 @@ function send_tips(tips, autotip) {
         normalize_ratios(tips);
 
         var total_tip_amount_satoshi = 0;
-        var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
+        //var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
         var added_to_tx = [];
         var tx = new Transaction().from(utxos).change(pub_key);
         $.each(tips, function(index, tip) {
@@ -222,8 +222,12 @@ function send_tips(tips, autotip) {
                 tx = tx.to(Address.fromString(tip.address), this_tip_amount);
                 added_to_tx.push(tip.address);
                 console.log('Added', tip.address, "to transaction at", this_tip_amount);
-            } else if(currency) {
+            } else if(false) { //currency) {
                 // call shapeshift.io to convert the bitcoin tip to altcoin
+                // commented out for the time being, until shapeshift removes their
+                // minimum amount, or another easy exchange API comes along that
+                // doesn't have a minumum amount.
+
                 if(num_of_shapeshifts >= 1) {
                     console.log("Canceling recipient because Shapeshift.io's code has a bug that doesn't allow for multiple deposits for a single transactions")
                     return
