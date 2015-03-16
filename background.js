@@ -296,6 +296,17 @@ function set_icon(tab_id) {
     });
 }
 
+chrome.webRequest.onBeforeRequest.addListener(
+    // this bit of code handles adding the 'autotip: true' request header to all
+    // outgoing requests. This is so servers know you have tipping capabilities.
+    function(details) {
+        details.requestHeaders.push({key: "Autotip", value: "true"})
+        return {requestHeaders: details.requestHeaders};
+    },
+    {urls: ["<all_urls>"]},
+);
+
+
 var whitelist_blacklist_status = {};
 var tip_addresses = {};
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
