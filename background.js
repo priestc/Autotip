@@ -9,7 +9,8 @@ chrome.storage.sync.get({
     blacklist_or_whitelist: null,
     domain_list: null,
     interval_seconds: null,
-    miner_fee: null
+    miner_fee: null,
+    giveaway_participation: null
 }, function(items) {
     if(!items.pub_key || !items.priv_key) {
         // if keys have not been generated, do so now and save them.
@@ -67,8 +68,12 @@ chrome.storage.sync.get({
             miner_fee: 0.01
         });
     }
+    if(!items.giveaway_participation) {
+        chrome.storage.sync.set({
+            giveaway_participation: true
+        });
+    }
 });
-
 
 var cents_per_btc, btc_price_fetch_date;
 function get_price_from_winkdex() {
@@ -90,9 +95,9 @@ function get_price_from_winkdex() {
             }
         });
         btc_price_fetch_date = new Date();
-        //console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+        console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
     } else {
-        //console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
+        console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
     }
     return cents_per_btc;
 }
@@ -223,7 +228,7 @@ function send_tips(tips, autotip) {
                 added_to_tx.push(tip.address);
                 console.log('Added', tip.address, "to transaction at", this_tip_amount);
             } else if(false) { //currency) {
-                // call shapeshift.io to convert the bitcoin tip to altcoin
+                // call shapeshift.io to convert the bitcoin tip to altcoin.
                 // commented out for the time being, until shapeshift removes their
                 // minimum amount, or another easy exchange API comes along that
                 // doesn't have a minumum amount.
@@ -296,16 +301,15 @@ function set_icon(tab_id) {
     });
 }
 
-chrome.webRequest.onBeforeRequest.addListener(
-    // this bit of code handles adding the 'autotip: true' request header to all
-    // outgoing requests. This is so servers know you have tipping capabilities.
-    function(details) {
-        details.requestHeaders.push({key: "Autotip", value: "true"})
-        return {requestHeaders: details.requestHeaders};
-    },
-    {urls: ["<all_urls>"]},
-);
-
+//chrome.webRequest.onBeforeRequest.addListener(
+//    // this bit of code handles adding the 'autotip: true' request header to all
+//    // outgoing requests. This is so servers know you have tipping capabilities.
+//    function(details) {
+//        details.requestHeaders.push({key: "Autotip", value: "true"})
+//        return {requestHeaders: details.requestHeaders};
+//    },
+//    {urls: ["<all_urls>"]},
+//);
 
 var whitelist_blacklist_status = {};
 var tip_addresses = {};

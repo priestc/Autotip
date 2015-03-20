@@ -45,6 +45,12 @@
             <h2>Miner's Fee</h2>
             $ <input type="text" name="miner_fee" style="width: 3em"> USD
 
+            <h2>Giveaway Participation</h2>
+            <input type="checkbox" name="giveaway_participation"> Participate<br>
+            <small>As you tip, this extension will 'phone home' to enter your
+                tipping address into a giveaway where you can win bitcoin.
+                No personal informatin is sent, only your deposit address.</small>
+
             <h2>Tipping Mode</h2>
             <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking <strong>immediately</strong> upon page load.<br>
             <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for <input type="number" name="interval_seconds"> seconds.<br>

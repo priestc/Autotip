@@ -21,7 +21,6 @@
     "permissions": [
         "storage",
         "tabs",
-        "webRequest",
         "http://btc.blockr.io/",
         "https://winkdex.com/"
     ],
