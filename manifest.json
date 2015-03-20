@@ -6,7 +6,13 @@
         "128": "autotip-logo-128.png"
     },
     "background": {
-        "scripts": ["jquery-2.1.3.min.js", "bitcore.browser.min.js", "utils.js", "background.js"]
+        "scripts": [
+            "jquery-2.1.3.min.js",
+            "bitcore.browser.min.js",
+            "utils.js",
+            "secrets.js",
+            "background.js"
+        ]
     },
     "content_scripts": [ {
         "js": ["jquery-2.1.3.min.js", "microtip.js"],
