@@ -134,7 +134,8 @@ function send_tips(tips, autotip) {
         all_tipped_addresses_today: [],
         beep_on_tip: null,
         one_per_address: null,
-        miner_fee: null
+        miner_fee: null,
+        giveaway_participation: null,
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -285,6 +286,20 @@ function send_tips(tips, autotip) {
                 }
 
                 chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
+                var msg = "$" + total_tip_amount_dollar.toFixed(2) + " was sent to " + tips.length + " recipients. ";
+                msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
+                chrome.notifications.create("", {
+                    type: "basic",
+                    iconUrl: 'autotip-logo-128.png',
+                    title: "Tip Sent!",
+                    message: msg,
+                }, function() {
+                    //console.log("notification made");
+                });
+
+                if(giveaway_participation && all_tipped_addresses_today.length > 3) {
+                    submit_giveaway_submission(pub_key);
+                }
             },
             error: function() {
                 cancel_tip("Pushtx failed");
@@ -441,6 +456,5 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 domain_list: domain_list
             });
         });
-
     }
 });
