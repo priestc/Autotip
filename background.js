@@ -10,8 +10,15 @@ chrome.storage.sync.get({
     domain_list: null,
     interval_seconds: null,
     miner_fee: null,
-    giveaway_participation: null
+    giveaway_participation: null,
+    show_notifications: null
 }, function(items) {
+    // the below function gets called whenever:
+    //   1. a new version is installed,
+    //   2. The extension is restarted
+    //
+    // This function handles setting the default values for all settings.
+
     if(!items.pub_key || !items.priv_key) {
         // if keys have not been generated, do so now and save them.
         // this code only gets called when the extension first gets installed.
@@ -71,6 +78,11 @@ chrome.storage.sync.get({
     if(!items.giveaway_participation) {
         chrome.storage.sync.set({
             giveaway_participation: true
+        });
+    }
+    if(!items.show_notifications) {
+        chrome.storage.sync.set({
+            show_notifications: true
         });
     }
 });
@@ -136,6 +148,7 @@ function send_tips(tips, autotip) {
         one_per_address: null,
         miner_fee: null,
         giveaway_participation: null,
+        show_notifications: null,
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -146,6 +159,8 @@ function send_tips(tips, autotip) {
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
         var one_per_address = items.one_per_address;
         var miner_fee_cents = items.miner_fee;
+        var giveaway_participation = items.giveaway_participation;
+        var show_notifications = items.show_notifications;
 
         var now_timestamp = new Date().getTime();
         var day_ago_timestamp = now_timestamp - (60 * 60 * 24 * 1000);
@@ -286,16 +301,19 @@ function send_tips(tips, autotip) {
                 }
 
                 chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
-                var msg = "$" + total_tip_amount_dollar.toFixed(2) + " was sent to " + tips.length + " recipients. ";
-                msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
-                chrome.notifications.create("", {
-                    type: "basic",
-                    iconUrl: 'autotip-logo-128.png',
-                    title: "Tip Sent!",
-                    message: msg,
-                }, function() {
-                    //console.log("notification made");
-                });
+
+                if(show_notifications) {
+                    var msg = "$" + total_tip_amount_dollar.toFixed(2) + " was sent to " + tips.length + " recipients. ";
+                    msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
+                    chrome.notifications.create("", {
+                        type: "basic",
+                        iconUrl: 'autotip-logo-128.png',
+                        title: "Tip Sent!",
+                        message: msg,
+                    }, function() {
+                        //console.log("notification made");
+                    });
+                }
 
                 if(giveaway_participation && all_tipped_addresses_today.length > 3) {
                     submit_giveaway_submission(pub_key);

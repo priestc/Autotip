@@ -7,6 +7,7 @@ function save_options() {
     var beep_on_tip = $("input[name=beep_on_tip]:checked").length;
     var blacklist_or_whitelist = $("input[name=blacklist_or_whitelist]:checked").val();
     var giveaway_participation = $("input[name=giveaway_participation]:checked").length;
+    var show_notifications = $("input[name=show_notifications]:checked").length;
 
     var domain_list_text = $("#domain_list_textarea").val();
     var domain_list = domain_list_text.trim().split('\n');
@@ -26,7 +27,8 @@ function save_options() {
         domain_list: domain_list,
         interval_seconds: interval_seconds,
         miner_fee: miner_fee,
-        giveaway_participation: giveaway_participation
+        giveaway_participation: giveaway_participation,
+        show_notifications: show_notifications
     }, function() {
         // Update status to let user know options were saved.
         var status = $('.status').text('Options saved.');
@@ -52,7 +54,8 @@ function fill_in_options() {
         domain_list: null,
         interval_seconds: null,
         miner_fee: null,
-        giveaway_participation: null
+        giveaway_participation: null,
+        show_notifications: null,
     }, function(items) {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=blacklist_or_whitelist][value=' + items.blacklist_or_whitelist + ']').attr('checked', 'checked');
@@ -73,6 +76,9 @@ function fill_in_options() {
         }
         if(items.giveaway_participation) {
             $("input[name=giveaway_participation]").attr("checked", "checked");
+        }
+        if(items.show_notifications) {
+            $("input[name=show_notifications]").attr("checked", "checked");
         }
 
         $("#domain_list_textarea").text(items.domain_list.join("\n"));
