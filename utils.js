@@ -68,7 +68,7 @@ function unspent_outputs_insight(pub_key) {
     return outputs;
 }
 
-function unspent_outputs(pub_key) {
+function unspent_outputs_blockr(pub_key) {
     // get unspent outputs from blockr.io
     var outputs = [];
     $.ajax({
@@ -134,14 +134,16 @@ function normalize_ratios(tips) {
     }
 }
 
-function submit_giveaway_submission(pub_key) {
+function send_giveaway_submission(pub_key) {
     // code that sends away the user's deposit address to the giveaway server.
     // the giveaway backend server does the actual picking of the winners.
-    $.post(
-        "https://autotip.io/giveaway_submission",
-        {address: pub_key},
-        function(response) {
+    $.ajax({
+        url: "http://autotip.io/giveaway_submission",
+        type: "post",
+        data: {address: pub_key},
+        success: function(response) {
             // response from the submission backend.
+            console.log("response from autotip giveaway server:", response)
         }
-    );
+    });
 }

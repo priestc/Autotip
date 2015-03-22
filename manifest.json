@@ -28,7 +28,8 @@
         "tabs",
         "notifications",
         "http://btc.blockr.io/",
-        "https://winkdex.com/"
+        "https://insight.bitpay.com/",
+        "https://winkdex.com/",
     ],
     "web_accessible_resources": [
         "*.png", "*.jpg", "*.js"

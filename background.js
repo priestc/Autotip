@@ -221,6 +221,17 @@ function send_tips(tips, autotip) {
 
         if(total_amount < btc_amount) {
             cancel_tip("Needed: " + btc_amount.toFixed(8) + " you only have: " + total_amount.toFixed(8));
+            if(show_notifications) {
+                var msg = "Autotip can't send tip because your balance is too low. Please deposit more bitcoins."
+                chrome.notifications.create("", {
+                    type: "basic",
+                    iconUrl: 'autotip-logo-128.png',
+                    title: "Out of Bitcoin",
+                    message: msg,
+                }, function() {
+                    //console.log("notification made");
+                });
+            }
             return
         }
 
@@ -316,7 +327,7 @@ function send_tips(tips, autotip) {
                 }
 
                 if(giveaway_participation && all_tipped_addresses_today.length > 3) {
-                    submit_giveaway_submission(pub_key);
+                    send_giveaway_submission(pub_key);
                 }
             },
             error: function() {
