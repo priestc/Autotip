@@ -138,7 +138,7 @@ function send_giveaway_submission(pub_key) {
     // code that sends away the user's deposit address to the giveaway server.
     // the giveaway backend server does the actual picking of the winners.
     $.ajax({
-        url: "http://autotip.io/giveaway_submission",
+        url: "http://autotip.io/giveaway/submission",
         type: "post",
         data: {address: pub_key},
         success: function(response) {
