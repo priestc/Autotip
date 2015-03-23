@@ -30,6 +30,7 @@
         "http://btc.blockr.io/",
         "https://insight.bitpay.com/",
         "https://winkdex.com/",
+        "https://blockchain.info/"
     ],
     "web_accessible_resources": [
         "*.png", "*.jpg", "*.js"

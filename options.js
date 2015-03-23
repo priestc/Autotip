@@ -88,7 +88,7 @@ function fill_in_options() {
             chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
                 var cents_per_btc = response.price;
                 var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
-                $('#current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
+                $('.current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
             });
         });
     });
