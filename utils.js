@@ -144,6 +144,16 @@ function send_giveaway_submission(pub_key) {
         success: function(response) {
             // response from the submission backend.
             console.log("response from autotip giveaway server:", response)
+            if(response == "OK") {
+                chrome.notifications.create("", {
+                    type: "basic",
+                    iconUrl: 'autotip-logo-128.png',
+                    title: "Entered into the autotip giveaway!",
+                    message: "For tipping three times today, you have earned one giveaway submission!",
+                }, function() {
+                    //console.log("notification made");
+                });
+            }
         }
     });
 }
