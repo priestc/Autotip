@@ -326,7 +326,7 @@ function send_tips(tips, autotip) {
                     });
                 }
 
-                if(giveaway_participation && all_tipped_addresses_today.length >= 3) {
+                if(giveaway_participation) {
                     send_giveaway_submission(pub_key);
                 }
             },
