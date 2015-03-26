@@ -5,7 +5,7 @@ function get_tips() {
     $("meta[name=microtip]").each(function(index, element) {
         var e = $(element);
         tips_on_this_page.push({
-            'currency': e.data('currency'),
+            'currency': e.data('currency') || 'btc',
             'address': e.attr('content'),
             'ratio': e.data('ratio'),
             'recipient': e.data('recipient')
