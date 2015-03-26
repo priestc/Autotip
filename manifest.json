@@ -1,7 +1,7 @@
 {
     "name": "Autotip",
     "description": "Decentralized Cryptocurrency Microtipping Platform.",
-    "version": "1.20",
+    "version": "1.21",
     "icons": {
         "128": "autotip-logo-128.png"
     },
