@@ -128,7 +128,7 @@ function reset_interval() {
     });
 }
 
-function send_tips(tips, autotip) {
+function send_tips(tips, autotip, tab_id) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
@@ -324,6 +324,7 @@ function send_tips(tips, autotip) {
                     }, function() {
                         //console.log("notification made");
                     });
+                    set_icon(tab_id, "tipped");
                 }
 
                 if(giveaway_participation) {
@@ -332,16 +333,27 @@ function send_tips(tips, autotip) {
             },
             error: function() {
                 cancel_tip("Pushtx failed");
+                set_icon(tab_id, "failed");
             }
         });
     });
 }
 
-function set_icon(tab_id) {
+function set_icon(tab_id, status) {
+    var url = 'autotip-logo-38.png'; // black
+
+    if(status == 'pending') {
+        url = 'autotip-logo-small-yellow.png'
+    } else if (status == 'tipped') {
+        url = 'autotip-logo-small-green.png'
+    } else if (status == 'failed') {
+        url = 'autotip-logo-small-red.png'
+    }
+
     chrome.pageAction.show(tab_id);
     chrome.pageAction.setIcon({
         tabId: tab_id,
-        path: chrome.extension.getURL('autotip-logo-38.png')
+        path: chrome.extension.getURL(url)
     });
 }
 
@@ -418,19 +430,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // report list of tips found on the page.
 
         var tab_id = sender.tab.id;
-        set_icon(tab_id);
+        set_icon(tab_id, 'pending');
         tip_addresses[tab_id] = request.found_tips;
     }
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false);
+        send_tips(request.tips, false, sender.tab.id);
         return
     }
 
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
-        send_tips(request.tips, true);
+        send_tips(request.tips, true, sender.tab.id);
         return
     }
     if(request.mode && request.domain) {
