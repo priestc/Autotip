@@ -235,7 +235,7 @@ function send_tips(tips, autotip, tab_id) {
                 var msg = "Autotip can't send tip because your balance is too low. Please deposit more bitcoins."
                 chrome.notifications.create("", {
                     type: "basic",
-                    iconUrl: 'autotip-logo-128.png',
+                    iconUrl: 'autotip-logo-128-red.png',
                     title: "Out of Bitcoin",
                     message: msg,
                 }, function() {

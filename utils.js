@@ -147,7 +147,7 @@ function send_giveaway_submission(pub_key) {
             if(response == "OK") {
                 chrome.notifications.create("", {
                     type: "basic",
-                    iconUrl: 'autotip-logo-128.png',
+                    iconUrl: 'autotip-logo-128-green.png',
                     title: "Entered into the autotip giveaway!",
                     message: "For tipping three times today, you have earned one giveaway submission!",
                 }, function() {
