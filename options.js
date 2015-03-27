@@ -83,13 +83,20 @@ function fill_in_options() {
 
         $("#domain_list_textarea").text(items.domain_list.join("\n"));
 
-        $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-            var balance = response['final_balance'] / 1e8; //replace spinner
-            chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
-                var cents_per_btc = response.price;
-                var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
-                $('.current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
-            });
+        $.ajax({
+            url: "https://blockchain.info/rawaddr/" + items.pub_key,
+            type: "get",
+            success: function(response) {
+                var balance = response['final_balance'] / 1e8; //replace spinner
+                chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
+                    var cents_per_btc = response.price;
+                    var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
+                    $('.current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
+                });
+            },
+            error: function(xhr, status, error) {
+                $('.current_balance').text("Network Error: " + status + error); //replace spinner
+            }
         });
     });
 }

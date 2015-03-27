@@ -104,10 +104,16 @@ function get_price_from_winkdex() {
             async: false,
             success: function(response) {
                 cents_per_btc = response['price'];
+            },
+            error: function(xhr, status, error) {
+                console.error("Call to winkdex to get btc price failed", status, error)
+                cents_per_btc = -1;
             }
         });
         btc_price_fetch_date = new Date();
-        console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+        if(cents_per_btc > 0) {
+            console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+        }
     } else {
         console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
     }
@@ -194,13 +200,17 @@ function send_tips(tips, autotip, tab_id) {
         console.log("Interval start:", new Date(daily_limit_start));
         console.log("All addresses today:", all_tipped_addresses_today)
 
+        var cents_per_btc = get_price_from_winkdex();
+        if(cents_per_btc < 0) {
+            // when call to winkdex fails, -1 is returned.
+            cancel_tip("Network Error");
+            return
+        }
+
         /////////////////////////////////////////////////////
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        //chrome.runtime.sendMessage({popup_status: "Creating Transaction..."});
-
-        var cents_per_btc = get_price_from_winkdex();
         var btc_amount = dollar_tip_amount / cents_per_btc * 100;
         var satoshi_amount = btc_amount * 100000000;
 

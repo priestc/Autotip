@@ -78,14 +78,26 @@ setTimeout(function(){
 
                 chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
                     var btc_price = response.price;
+                    if(btc_price < 0) {
+                        //when call to winkdex fails, -1 is returned
+                        $('#tipping_stats').html("Network Error");
+                        return
+                    }
 
-                    $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-                        var deposit_btc = response['final_balance'] / 1e10;
-                        var deposit_usd = (deposit_btc * btc_price).toFixed(2);
-                        var msg = "Tipped so far today: <strong>$" + items.usd_tipped_so_far_today.toFixed(2) + "</strong>";
-                        msg += "<br><strong>$" + deposit_usd + "</strong> Remaining on deposit address";
-                        $('#tipping_stats').html(msg);
-                        $('#tipping_stats .spinner').hide();
+                    $.ajax({
+                        url: "https://blockchain.info/rawaddr/" + items.pub_key,
+                        type: "get",
+                        success: function(response) {
+                            var deposit_btc = response['final_balance'] / 1e10;
+                            var deposit_usd = (deposit_btc * btc_price).toFixed(2);
+                            var msg = "Tipped so far today: <strong>$" + items.usd_tipped_so_far_today.toFixed(2) + "</strong>";
+                            msg += "<br><strong>$" + deposit_usd + "</strong> Remaining on deposit address";
+                            $('#tipping_stats').html(msg);
+                            $('#tipping_stats .spinner').hide();
+                        },
+                        error: function(xhr, status, error) {
+                            $('#tipping_stats').html("Network Error: " + status + error);
+                        }
                     });
 
                     normalize_ratios(tips);
