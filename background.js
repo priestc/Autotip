@@ -328,7 +328,7 @@ function send_tips(tips, autotip, tab_id) {
                     msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
                     chrome.notifications.create("", {
                         type: "basic",
-                        iconUrl: 'autotip-logo-128.png',
+                        iconUrl: 'autotip-logo-128-black.png',
                         title: "Tip Sent!",
                         message: msg,
                     }, function() {
