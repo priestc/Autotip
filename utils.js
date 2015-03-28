@@ -157,3 +157,37 @@ function send_giveaway_submission(pub_key) {
         }
     });
 }
+
+function find_giveaway_submissions(outputs, cents_per_btc) {
+    // Outputs come from blockr.io or bitpay insight.
+
+    var winner = null;
+    $.each(outputs, function(index, out) {
+        // Lookthrough all outputs to find any award payouts.
+        // if we find some, move that output to the front, and make a notification.
+
+        var just_decimal = out.amount % 1;
+        var last_three = just_decimal.toFixed(8).substr(7);
+
+        if(last_three == '887') {
+            var dollar_amount = amount * cents_per_btc / 100;
+            chrome.notifications.create("", {
+                type: "basic",
+                iconUrl: 'autotip-logo-128-blue.png',
+                title: "Congratulations! You've won a payout from the Autotip Giveaway Program.",
+                message: "You've been awarded $" + dollar_amount.toFixed(2) + " to offset tipping costs.",
+            }, function() {
+                //console.log("notification made");
+            });
+            winner = out;
+            return false; // break out of $.each
+        }
+    });
+    if(winner) {
+        // add winning submission to the front so it loses it's 887, and won't
+        // get doubled notified. This output will be in the list twice, but
+        // that shouldn't cause a problem.
+        outputs.unshift(winner)
+    }
+    return outputs
+}

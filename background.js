@@ -111,7 +111,7 @@ function get_price_from_winkdex() {
             }
         });
         btc_price_fetch_date = new Date();
-        if(cents_per_btc > 0) {
+        if(cents_per_btc >= 0) {
             console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
         }
     } else {
@@ -350,14 +350,14 @@ function send_tips(tips, autotip, tab_id) {
 }
 
 function set_icon(tab_id, status) {
-    var url = 'autotip-logo-38.png'; // black
+    var url = 'autotip-logo-38-black.png'; // black
 
     if(status == 'pending') {
-        url = 'autotip-logo-small-yellow.png'
+        url = 'autotip-logo-38-yellow.png'
     } else if (status == 'tipped') {
-        url = 'autotip-logo-small-green.png'
+        url = 'autotip-logo-38-green.png'
     } else if (status == 'failed') {
-        url = 'autotip-logo-small-red.png'
+        url = 'autotip-logo-38-red.png'
     }
 
     chrome.pageAction.show(tab_id);
@@ -440,7 +440,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // report list of tips found on the page.
 
         var tab_id = sender.tab.id;
-        set_icon(tab_id, 'pending');
+        var one_address_not_tipped = false
+
+        chrome.storage.sync.get({
+            all_tipped_addresses_today: null,
+        }, function(items) {
+            var all = items.all_tipped_addresses_today;
+            $.each(request.found_tips, function(index, address) {
+                console.log('address on page', index, address);
+                if(all.indexOf(address.address) < 0) {
+                    // we have not tipped this address yet
+                    set_icon(tab_id, 'pending');
+                    one_address_not_tipped = true
+                    return false // break out of $.each
+                }
+            });
+            if(!one_address_not_tipped) {
+                // already tipped all addresses, use green icon
+                set_icon(tab_id, 'tipped');
+            }
+        });
+
         tip_addresses[tab_id] = request.found_tips;
     }
 
