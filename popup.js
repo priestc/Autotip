@@ -79,9 +79,9 @@ setTimeout(function(){
 
                 chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
                     var btc_price = response.price;
-                    if(btc_price < 0) {
-                        //when call to winkdex fails, -1 is returned
-                        $('#tipping_stats').html("Network Error");
+                    if(!btc_price) {
+                        //when call to winkdex fails, null is returned
+                        $('#tipping_stats').html("Network Error: Could not get pirce from winkdex");
                         return
                     }
 
