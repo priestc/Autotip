@@ -70,32 +70,33 @@ chrome.storage.sync.get({
     }
 
     console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
-    chrome.runtime.sendMessage({found_tips: tips});
+    chrome.runtime.sendMessage({found_tips: tips}, function(response) {
+        var already_tipped = response.already_tipped;
 
-    if(pblwl && items.when_to_send == '5mins') {
-        var five_minute_counter_start = new Date();
-        intervalID = setInterval(function() {
-            // update popup status every 1 second. After 5 minutes (or whatever the setting is), make the tip
-            var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - five_minute_counter_start) / 1000));
-            if(seconds_to_go <= 0) {
-                chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
-                console.log(items.interval_seconds, 'seconds past, will try to make tip.');
-                clearInterval(intervalID);
-            } else {
-                var msg = "Sending tip in " + seconds_to_go + " Seconds";
-                chrome.runtime.sendMessage({popup_timer: msg});
-            }
-        }, 1000);
-    } else if(pblwl && items.when_to_send == 'immediately') {
-        // go ahead and make the tip automatically.
-        chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
-    }
-
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        console.log("content script got message");
-        if(request.end_5min_timer) {
-            clearInterval(intervalID);
+        if(pblwl && items.when_to_send == '5mins' && !already_tipped) {
+            var five_minute_counter_start = new Date();
+            intervalID = setInterval(function() {
+                // update popup status every 1 second. After 5 minutes (or whatever the setting is), make the tip
+                var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - five_minute_counter_start) / 1000));
+                if(seconds_to_go <= 0) {
+                    chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
+                    console.log(items.interval_seconds, 'seconds past, will try to make tip.');
+                    clearInterval(intervalID);
+                } else {
+                    var msg = "Sending tip in " + seconds_to_go + " Seconds";
+                    chrome.runtime.sendMessage({popup_timer: msg});
+                }
+            }, 1000);
+        } else if(pblwl && items.when_to_send == 'immediately' && !already_tipped) {
+            // go ahead and make the tip automatically.
+            chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
         }
     });
+});
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log("content script got message");
+    if(request.end_5min_timer) {
+        clearInterval(intervalID);
+    }
 });

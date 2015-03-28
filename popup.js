@@ -59,6 +59,7 @@ setTimeout(function(){
                 pub_key: null,
             }, function(items) {
                 $("#qr").qrcode({width: 100, height: 100, text: items.pub_key});
+                $("#tip_history").attr('href', 'https://blockchain.info/address/' + items.pub_key)
 
                 var dollar_tip_amount = items.dollar_tip_amount;
 

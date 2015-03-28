@@ -103,15 +103,20 @@ function get_price_from_winkdex() {
             type: 'get',
             async: false,
             success: function(response) {
-                cents_per_btc = response['price'];
+                if response['price'] > 0 {
+                    cents_per_btc = response['price'];
+                } else {
+                    console.error("winkdex returned 0 (??)", status, error)
+                    cents_per_btc = null;
+                }
             },
             error: function(xhr, status, error) {
                 console.error("Call to winkdex to get btc price failed", status, error)
-                cents_per_btc = -1;
+                cents_per_btc = null;
             }
         });
         btc_price_fetch_date = new Date();
-        if(cents_per_btc >= 0) {
+        if(cents_per_btc > 0) {
             console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
         }
     } else {
@@ -139,8 +144,7 @@ function send_tips(tips, autotip, tab_id) {
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
     // via manual or automatically.
-    // * The third argument is a function that corresponds to chrome's message system
-    // that returns the status of this tip to the popup.
+    // * The third argument is the tab id that the tip is going to.
 
     chrome.storage.sync.get({
         daily_limit_start: null,
@@ -201,9 +205,10 @@ function send_tips(tips, autotip, tab_id) {
         console.log("All addresses today:", all_tipped_addresses_today)
 
         var cents_per_btc = get_price_from_winkdex();
-        if(cents_per_btc < 0) {
-            // when call to winkdex fails, -1 is returned.
-            cancel_tip("Network Error");
+        console.log("winkdex returned", cents_per_btc)
+        if(!cents_per_btc) {
+            // when call to winkdex fails, null is returned.
+            cancel_tip("Network Error: Could not get price from winkdex");
             return
         }
 
@@ -440,14 +445,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // report list of tips found on the page.
 
         var tab_id = sender.tab.id;
-        var one_address_not_tipped = false
+        var one_address_not_tipped = false;
 
         chrome.storage.sync.get({
             all_tipped_addresses_today: null,
         }, function(items) {
+            // Determine if all addresses on the page have been tipped today
             var all = items.all_tipped_addresses_today;
             $.each(request.found_tips, function(index, address) {
-                console.log('address on page', index, address);
                 if(all.indexOf(address.address) < 0) {
                     // we have not tipped this address yet
                     set_icon(tab_id, 'pending');
@@ -462,6 +467,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
 
         tip_addresses[tab_id] = request.found_tips;
+        sendResponse({
+            already_tipped: !one_address_not_tipped
+        });
+        return
     }
 
     if(request.perform_tip == 'manual') {
