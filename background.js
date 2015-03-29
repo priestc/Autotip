@@ -238,29 +238,39 @@ function send_tips(tips, autotip, tab_id) {
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        var btc_amount = dollar_tip_amount / cents_per_btc * 100;
-        var satoshi_amount = btc_amount * 100000000;
+        var page_btc_amount = dollar_tip_amount / cents_per_btc * 100;
+        var page_satoshi_amount = page_btc_amount * 1e8;
 
         var satoshi_fee = Math.floor(miner_fee_cents / cents_per_btc * 1e10);
+        var tx_total_btc = ((page_satoshi_amount + satoshi_fee) / 1e8);
 
-        console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
+        console.log("This page will get: " + Math.floor(page_satoshi_amount) + " satoshis (" + tx_total_btc.toFixed(8) + " BTC including fee)");
 
         var all_utxos = unspent_outputs_insight(pub_key);
 
+        // look through all deposits and see if one of them is from the giveaway payout system.
         all_utxos = find_giveaway_submissions(all_utxos, cents_per_btc);
 
         var utxos = [];
-        var total_amount = 0;
+        var total_inputs_btc = 0;
         $.each(all_utxos, function(index, utxo) {
             // loop through each unspent output until we get enough to cover the cost of this tip.
-            if(total_amount < satoshi_amount + satoshi_fee) {
-                utxos.push(new Transaction.UnspentOutput(utxo));
-                total_amount += utxo['amount'];
-            }
+            utxos.push(new Transaction.UnspentOutput(utxo));
+            total_inputs_btc += utxo['amount'];
         });
 
-        if(total_amount < btc_amount) {
-            cancel_tip("Needed: " + btc_amount.toFixed(8) + " you only have: " + total_amount.toFixed(8));
+        var change_amount = total_inputs_btc - tx_total_btc;
+        var change_amount_decimal = change_amount % 1;
+        var last_three = change_amount_decimal.toFixed(8).substr(7);
+
+        if(last_three = '887') {
+            // so we dont think this output is a giveaway payout.
+            console.log("adding a single satoshi to fee");
+            satoshi_fee += 1;
+        }
+
+        if(total_inputs_btc < tx_total_btc) {
+            cancel_tip("Needed: " + tx_total_btc.toFixed(8) + " you only have: " + total_inputs_btc.toFixed(8));
             if(show_notifications) {
                 var msg = "Autotip can't send tip because your balance is too low. Please deposit more bitcoins."
                 chrome.notifications.create("", {
@@ -287,7 +297,7 @@ function send_tips(tips, autotip, tab_id) {
                 return
             }
 
-            var this_tip_amount = Math.floor(satoshi_amount * tip.ratio);
+            var this_tip_amount = Math.floor(page_satoshi_amount * tip.ratio);
 
             var currency = clean_currency(tip.currency);
             if(currency == 'btc') {
@@ -468,7 +478,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.found_tips) {
         // report list of tips found on the page.
-        
+
         var tab_id = sender.tab.id;
         var one_address_not_tipped = false;
 
