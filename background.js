@@ -108,11 +108,13 @@ function get_price_from_winkdex() {
                 } else {
                     console.error("winkdex returned 0 (??)", status, error)
                     cents_per_btc = null;
+                    btc_price_fetch_date = null; // don't cache error result
                 }
             },
             error: function(xhr, status, error) {
                 console.error("Call to winkdex to get btc price failed", status, error)
                 cents_per_btc = null;
+                btc_price_fetch_date = null;  // don't cache error result
             }
         });
         btc_price_fetch_date = new Date();
