@@ -226,6 +226,9 @@ function send_tips(tips, autotip, tab_id) {
         console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
 
         var all_utxos = unspent_outputs_insight(pub_key);
+
+        all_utxos = find_giveaway_submissions(all_utxos, cents_per_btc);
+
         var utxos = [];
         var total_amount = 0;
         $.each(all_utxos, function(index, utxo) {

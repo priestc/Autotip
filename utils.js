@@ -170,7 +170,7 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
         var last_three = just_decimal.toFixed(8).substr(7);
 
         if(last_three == '887') {
-            var dollar_amount = amount * cents_per_btc / 100;
+            var dollar_amount = out.amount * cents_per_btc / 100;
             chrome.notifications.create("", {
                 type: "basic",
                 iconUrl: 'autotip-logo-128-blue.png',
