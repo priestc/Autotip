@@ -103,10 +103,10 @@ function get_price_from_winkdex() {
             type: 'get',
             async: false,
             success: function(response) {
-                if response['price'] > 0 {
+                if (response['price'] > 0) {
                     cents_per_btc = response['price'];
                 } else {
-                    console.error("winkdex returned 0 (??)", status, error)
+                    console.error("winkdex returned 0 (??)")
                     cents_per_btc = null;
                     btc_price_fetch_date = null; // don't cache error result
                 }
@@ -117,8 +117,8 @@ function get_price_from_winkdex() {
                 btc_price_fetch_date = null;  // don't cache error result
             }
         });
-        btc_price_fetch_date = new Date();
         if(cents_per_btc > 0) {
+            btc_price_fetch_date = new Date();
             console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
         }
     } else {
