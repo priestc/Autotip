@@ -72,7 +72,7 @@ chrome.storage.sync.get({
     console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
     chrome.runtime.sendMessage({found_tips: tips}, function(response) {
         var already_tipped = response.already_tipped;
-
+        
         if(pblwl && items.when_to_send == '5mins' && !already_tipped) {
             var five_minute_counter_start = new Date();
             intervalID = setInterval(function() {

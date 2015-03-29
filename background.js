@@ -87,6 +87,26 @@ chrome.storage.sync.get({
     }
 });
 
+var cents_per_btc_bitstamp;
+function get_price_from_bitstamp() {
+    $.ajax({
+        url: "https://www.bitstamp.net/api/ticker/",
+        type: 'get',
+        async: false,
+        success: function(response) {
+            if (response['last'] > 0) {
+                cents_per_btc_bitstamp = parseFloat(response['last'] * 100);
+            } else {
+                console.error("bitstamp returned 0 (??)");
+                cents_per_btc_bitstamp = null;
+            }
+        }
+    });
+
+    return cents_per_btc_bitstamp
+}
+
+
 var cents_per_btc, btc_price_fetch_date;
 function get_price_from_winkdex() {
     // Makes a call to the winkdex to get the current price for bitcoin
@@ -106,20 +126,20 @@ function get_price_from_winkdex() {
                 if (response['price'] > 0) {
                     cents_per_btc = response['price'];
                 } else {
-                    console.error("winkdex returned 0 (??)")
-                    cents_per_btc = null;
-                    btc_price_fetch_date = null; // don't cache error result
+                    console.error("price returned 0 (??)")
+                    console.log("trying to get price from bitstamp")
+                    cents_per_btc = get_price_from_bitstamp();
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Call to winkdex to get btc price failed", status, error)
+                console.error("Call to get btc price failed", status, error)
                 cents_per_btc = null;
-                btc_price_fetch_date = null;  // don't cache error result
+                btc_price_fetch_date = null;
             }
         });
         if(cents_per_btc > 0) {
             btc_price_fetch_date = new Date();
-            console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+            console.log("Made call to get BTC price:", cents_per_btc / 100, "USD/BTC");
         }
     } else {
         console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
@@ -448,7 +468,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.found_tips) {
         // report list of tips found on the page.
-
+        
         var tab_id = sender.tab.id;
         var one_address_not_tipped = false;
 
@@ -469,18 +489,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 // already tipped all addresses, use green icon
                 set_icon(tab_id, 'tipped');
             }
+            tip_addresses[tab_id] = request.found_tips;
+            sendResponse({
+                already_tipped: !one_address_not_tipped
+            });
         });
-
-        tip_addresses[tab_id] = request.found_tips;
-        sendResponse({
-            already_tipped: !one_address_not_tipped
-        });
-        return
+        return true; // indicate asynchronious response
     }
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false, sender.tab.id);
+        send_tips(request.tips, false, request.tab_id || sender.tab.id);
         return
     }
 

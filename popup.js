@@ -74,7 +74,7 @@ setTimeout(function(){
                     $(this).attr('disabled', 'disabled');
                     $('#status').show().text("Creating Transaction...").css({background: 'lightgreen', color: 'black'});
                     chrome.runtime.sendMessage({end_5min_timer: true});
-                    chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips});
+                    chrome.runtime.sendMessage({perform_tip: 'manual', tips: tips, tab_id: tab_id});
                 });
 
                 chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
