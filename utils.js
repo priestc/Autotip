@@ -183,11 +183,4 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
             return false; // break out of $.each
         }
     });
-    if(winner) {
-        // add winning submission to the front so it loses it's 887, and won't
-        // get doubled notified. This output will be in the list twice, but
-        // that shouldn't cause a problem.
-        outputs.unshift(winner)
-    }
-    return outputs
 }

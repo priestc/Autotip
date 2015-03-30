@@ -249,7 +249,7 @@ function send_tips(tips, autotip, tab_id) {
         var all_utxos = unspent_outputs_insight(pub_key);
 
         // look through all deposits and see if one of them is from the giveaway payout system.
-        all_utxos = find_giveaway_submissions(all_utxos, cents_per_btc);
+        find_giveaway_submissions(all_utxos, cents_per_btc);
 
         var utxos = [];
         var total_inputs_btc = 0;
