@@ -152,14 +152,40 @@ function cancel_tip(msg) {
     chrome.runtime.sendMessage({popup_status: msg, fail: true});
 }
 
-function reset_interval() {
-    // for testing and debugging
-    chrome.storage.sync.set({
-        usd_tipped_so_far_today: 0,
-        daily_limit_start: new Date().getTime(),
-        all_tipped_addresses_today: []
-    });
+/////////////////////////////////////////
+//
+//  Alarm for resetting all daily limits
+//
+/////////////////////////////////////////
+
+function make_next_alarm() {
+    var end_of_day = new Date();
+    end_of_day.setHours(23,59,59,999);
+    console.log("Made alarm for", end_of_day);
+    chrome.alarms.create("EndOfDay", {when: end_of_day.getTime()});
 }
+
+chrome.runtime.onInstalled.addListener(make_next_alarm);
+
+chrome.alarms.onAlarm.addListener(function(alarm) {
+    // All variables that relate to daily limits or list of domains
+    // tipped today get resetted. This code need to be called
+    // periotically on a daily basis.
+
+    if(alarm.name == "EndOfDay") {
+        console.log("caught alarm, resetting all daily values");
+
+        chrome.storage.sync.set({
+            usd_tipped_so_far_today: 0,
+            all_tipped_addresses_today: [],
+            all_tipped_domains_today: []
+        }, function() {
+            make_next_alarm();
+        });
+    }
+});
+
+// end alarm code
 
 function send_tips(tips, autotip, tab_id) {
     // Make the bitcoin transaction and push it to the network.
@@ -169,7 +195,6 @@ function send_tips(tips, autotip, tab_id) {
     // * The third argument is the tab id that the tip is going to.
 
     chrome.storage.sync.get({
-        daily_limit_start: null,
         usd_tipped_so_far_today: null,
         daily_tip_limit: null,
         pub_key: null,
@@ -186,7 +211,6 @@ function send_tips(tips, autotip, tab_id) {
         var priv_key = items.priv_key;
         var dollar_tip_amount = items.dollar_tip_amount;
         var usd_tipped_so_far_today = items.usd_tipped_so_far_today;
-        var daily_limit_start = items.daily_limit_start;
         var daily_tip_limit = items.daily_tip_limit;
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
         var one_per_address = items.one_per_address;
@@ -194,40 +218,19 @@ function send_tips(tips, autotip, tab_id) {
         var giveaway_participation = items.giveaway_participation;
         var show_notifications = items.show_notifications;
 
-        var now_timestamp = new Date().getTime();
-        var day_ago_timestamp = now_timestamp - (60 * 60 * 24 * 1000);
-
         /////////////////////////////////////////////////////
         ///// determine if we make the tip, or cancel the tip
         /////////////////////////////////////////////////////
 
-        var new_accumulation = 0;
+        var new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
 
-        if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
-            // it was over a day ago since we've been keeping track, reset the interval
-            console.log("Resetting daily interval now. Old interval started:", new Date(daily_limit_start))
-            chrome.storage.sync.set({
-                usd_tipped_so_far_today: 0,
-                daily_limit_start: now_timestamp,
-                all_tipped_addresses_today: []
-            });
-            daily_limit_start = now_timestamp;
-            usd_tipped_so_far_today = 0;
-            all_tipped_addresses_today = [];
-        } else {
-            // Make sure this tip isn't going to put us over the daily tipping limit
-            new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
-            if(new_accumulation > daily_tip_limit && autotip) {
-                cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
-                return
-            }
+        if(new_accumulation > daily_tip_limit && autotip) {
+            cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
+            return
         }
 
-        console.log("Interval start:", new Date(daily_limit_start));
-        console.log("All addresses today:", all_tipped_addresses_today)
-
         var cents_per_btc = get_price_from_winkdex();
-        console.log("winkdex returned", cents_per_btc)
+        console.log("winkdex returned", cents_per_btc, "cents/BTC")
         if(!cents_per_btc) {
             // when call to winkdex fails, null is returned.
             cancel_tip("Network Error: Could not get price from winkdex");

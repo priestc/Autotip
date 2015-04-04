@@ -10,3 +10,9 @@ Autotip is:
 * A system where you can receive Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
 
 For more information go here: [http://autotip.io](http://autotip.io)
+
+Autotip in the news:
+
+* http://bravenewcoin.com/news/autotip-launches-while-coinbase-bows-out-to-changetip/
+* http://cointelegraph.com/news/113461/pay-the-content-creators-decentralized-autotip-service-released
+* http://b1bl3.com/autotip-a-free-google-chrome-plugin-to-tip-content-creators-with-bitcoin-or-altcoins/

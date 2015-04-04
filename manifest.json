@@ -26,6 +26,7 @@
     "permissions": [
         "storage",
         "tabs",
+        "alarms",
         "notifications",
         "http://btc.blockr.io/",
         "https://insight.bitpay.com/",
