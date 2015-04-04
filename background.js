@@ -173,13 +173,15 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
     // periotically on a daily basis.
 
     if(alarm.name == "EndOfDay") {
-        console.log("caught alarm, resetting all daily values");
+        console.log("Running End of Day alarm, resetting all daily values");
 
         chrome.storage.sync.set({
             usd_tipped_so_far_today: 0,
             all_tipped_addresses_today: [],
             all_tipped_domains_today: []
         }, function() {
+            // hopefully by now 0.001 seconds have passed
+            // so this alarm gets made for the end of the next day.
             make_next_alarm();
         });
     }
