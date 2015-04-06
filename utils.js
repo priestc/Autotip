@@ -161,7 +161,6 @@ function send_giveaway_submission(pub_key) {
 function find_giveaway_submissions(outputs, cents_per_btc) {
     // Outputs come from blockr.io or bitpay insight.
 
-    var winner = null;
     $.each(outputs, function(index, out) {
         // Lookthrough all outputs to find any award payouts.
         // if we find some, move that output to the front, and make a notification.
@@ -179,7 +178,6 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
             }, function() {
                //console.log("notification made");
             });
-            winner = out;
             return false; // break out of $.each
         }
     });
