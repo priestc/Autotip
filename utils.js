@@ -145,14 +145,14 @@ function send_giveaway_submission(pub_key) {
             // response from the submission backend.
             console.log("response from autotip giveaway server:", response)
             if(response == "OK") {
-                chrome.notifications.create("", {
-                    type: "basic",
-                    iconUrl: 'autotip-logo-128-green.png',
-                    title: "Entered into the autotip giveaway!",
-                    message: "For tipping three times today, you have earned one giveaway submission!",
-                }, function() {
-                    //console.log("notification made");
-                });
+                // chrome.notifications.create("", {
+                //     type: "basic",
+                //     iconUrl: 'autotip-logo-128-green.png',
+                //     title: "Entered into the autotip giveaway!",
+                //     message: "For tipping three times today, you have earned one giveaway submission!",
+                // }, function() {
+                //     //console.log("notification made");
+                // });
             }
         }
     });
@@ -171,14 +171,14 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
 
         if(last_three == '887') {
             var dollar_amount = out.amount * cents_per_btc / 100;
-            //chrome.notifications.create("", {
-            //    type: "basic",
-            //    iconUrl: 'autotip-logo-128-blue.png',
-            //    title: "Congratulations! You've won a payout from the Autotip Giveaway Program.",
-            //    message: "You've been awarded $" + dollar_amount.toFixed(2) + " to offset tipping costs.",
-            //}, function() {
-            //    //console.log("notification made");
-            //});
+            chrome.notifications.create("", {
+               type: "basic",
+               iconUrl: 'autotip-logo-128-blue.png',
+               title: "Congratulations! You've won a payout from the Autotip Giveaway Program.",
+               message: "You've been awarded $" + dollar_amount.toFixed(2) + " to offset tipping costs.",
+            }, function() {
+               //console.log("notification made");
+            });
             winner = out;
             return false; // break out of $.each
         }
