@@ -147,7 +147,7 @@ function send_giveaway_submission(pub_key) {
             if(response == "OK") {
                 // chrome.notifications.create("", {
                 //     type: "basic",
-                //     iconUrl: 'autotip-logo-128-green.png',
+                //     iconUrl: 'logos/autotip-logo-128-green.png',
                 //     title: "Entered into the autotip giveaway!",
                 //     message: "For tipping three times today, you have earned one giveaway submission!",
                 // }, function() {
@@ -172,7 +172,7 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
             var dollar_amount = out.amount * cents_per_btc / 100;
             chrome.notifications.create("", {
                type: "basic",
-               iconUrl: 'autotip-logo-128-blue.png',
+               iconUrl: 'logos/autotip-logo-128-blue.png',
                title: "Congratulations! You've won a payout from the Autotip Giveaway Program.",
                message: "You've been awarded $" + dollar_amount.toFixed(2) + " to offset tipping costs.",
             }, function() {
