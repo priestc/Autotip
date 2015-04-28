@@ -2,15 +2,25 @@ var intervalID;
 
 function get_tips() {
     var tips_on_this_page = [];
+    var found_audio = false;
+
     $("meta[name=microtip]").each(function(index, element) {
         var e = $(element);
+        var content = e.attr('content');
+        if(content.toLowerCase() == 'audio') {
+            found_audio = true;
+            return false; // break from loop
+        }
         tips_on_this_page.push({
             'currency': e.data('currency') || 'btc',
-            'address': e.attr('content'),
+            'address': content,
             'ratio': e.data('ratio'),
             'recipient': e.data('recipient')
         });
     });
+    if(found_audio) {
+        return "Audio"
+    }
     return tips_on_this_page
 }
 
@@ -43,6 +53,7 @@ chrome.storage.sync.get({
     interval_seconds: null
 }, function(items) {
     var tips = get_tips();
+
     if(tips.length <= 0) {
         return // No tips found
     }
@@ -69,10 +80,22 @@ chrome.storage.sync.get({
         });
     }
 
+    if(tips == 'Audio') {
+        console.log("Audiotip enabled. Listening for song end events");
+        $("audio").on("ended", function(event) {
+            var tips = JSON.parse($(event.target).text());
+            if(tips && tips[0] && tips[0].address) {
+                chrome.runtime.sendMessage({audio_song_end: tips});
+                console.log('Autotip caught audio.end event:', tips);
+            }
+        });
+        return;
+    }
+
     console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
     chrome.runtime.sendMessage({found_tips: tips}, function(response) {
         var already_tipped = response.already_tipped;
-        
+
         if(pblwl && items.when_to_send == '5mins' && !already_tipped) {
             var five_minute_counter_start = new Date();
             intervalID = setInterval(function() {

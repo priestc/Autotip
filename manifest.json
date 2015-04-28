@@ -3,7 +3,7 @@
     "description": "Decentralized Cryptocurrency Microtipping Platform.",
     "version": "1.25",
     "icons": {
-        "128": "autotip-logo-128-black.png"
+        "128": "logos/autotip-logo-128-black.png"
     },
     "background": {
         "scripts": [

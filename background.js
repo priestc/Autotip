@@ -280,7 +280,7 @@ function send_tips(tips, autotip, tab_id) {
                 var msg = "Autotip can't send tip because your balance is too low. Please deposit more bitcoins."
                 chrome.notifications.create("", {
                     type: "basic",
-                    iconUrl: 'autotip-logo-128-red.png',
+                    iconUrl: 'logos/autotip-logo-128-red.png',
                     title: "Out of Bitcoin",
                     message: msg,
                 }, function() {
@@ -373,7 +373,7 @@ function send_tips(tips, autotip, tab_id) {
                     msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
                     chrome.notifications.create("", {
                         type: "basic",
-                        iconUrl: 'autotip-logo-128-black.png',
+                        iconUrl: 'logos/autotip-logo-128-black.png',
                         title: "Tip Sent!",
                         message: msg,
                     }, function() {
@@ -395,14 +395,14 @@ function send_tips(tips, autotip, tab_id) {
 }
 
 function set_icon(tab_id, status) {
-    var url = 'autotip-logo-38-black.png'; // black
+    var url = 'logos/autotip-logo-38-black.png'; // black
 
     if(status == 'pending') {
-        url = 'autotip-logo-38-yellow.png'
+        url = 'logos/autotip-logo-38-yellow.png'
     } else if (status == 'tipped') {
-        url = 'autotip-logo-38-green.png'
+        url = 'logos/autotip-logo-38-green.png'
     } else if (status == 'failed') {
-        url = 'autotip-logo-38-red.png'
+        url = 'logos/autotip-logo-38-red.png'
     }
 
     chrome.pageAction.show(tab_id);
@@ -432,9 +432,45 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return
     }
 
+    if(request.audio_song_end) {
+        // A song just ended, the content script has picked up the tips from the
+        // <audio> element, and has sent the message back. This code handles that
+        // message.
+
+        var tab_id = sender.tab.id;
+        var new_tips = [];
+        var added_to_existing = [];
+
+        $.each(tip_addresses[tab_id], function(i, existing_tip) {
+            // add new song to tip list
+            $.each(request.audio_song_end, function(i, new_tip) {
+                if(existing_tip.address == new_tip.address) {
+                    // add to the existing tip by adding on the ratio.
+
+                    new_tips.push({
+                        ratio: new_tip.ratio + existing_tip.ratio,
+                        address: new_tip.address,
+                        recipient: new_tip.recipient
+                    })
+                    added_to_existing.push(new_tip.address)
+                }
+            });
+        });
+
+        $.each(request.audio_song_end, function(i, tip) {
+            if(added_to_existing.indexOf(tip.address) == -1) {
+                // this address was not added to an existing total
+                new_tips.push(tip)
+            }
+        });
+
+        tip_addresses[tab_id] = new_tips;
+        return
+    }
+
     if(request.get_tips) {
         // the popup's js needs the tips for displaying on that page.
-        // also send back a black/white listi button if applicable.
+        // also send back a black/white list button if applicable.
 
         var tab_id = request.tab;
         var data = whitelist_blacklist_status[tab_id];

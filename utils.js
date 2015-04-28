@@ -34,16 +34,16 @@ function clean_currency(currency) {
 function get_icon_for_currency(currency) {
     var cleaned = clean_currency(currency);
     if(cleaned == 'btc') {
-        return chrome.extension.getURL('orange-bitcoin-38.png');
+        return chrome.extension.getURL('logos/orange-bitcoin-38.png');
     }
     if(cleaned == 'ltc') {
-        return chrome.extension.getURL('litecoin-128.png');
+        return chrome.extension.getURL('logos/litecoin-128.png');
     }
     if(cleaned == 'doge') {
-        return chrome.extension.getURL('dogecoin-128.png');
+        return chrome.extension.getURL('logos/dogecoin-128.png');
     }
     if(cleaned == 'ppc') {
-        return chrome.extension.getURL('gold-peercoin-250.png');
+        return chrome.extension.getURL('logos/gold-peercoin-250.png');
     }
 }
 function unspent_outputs_insight(pub_key) {
