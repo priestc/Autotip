@@ -81,6 +81,7 @@ chrome.storage.sync.get({
     }
 
     if(tips == 'Audio') {
+        chrome.runtime.sendMessage({audio_start: true}); // puts up the icon 
         console.log("Audiotip enabled. Listening for song end events");
         $("audio").on("ended", function(event) {
             var tips = JSON.parse($(event.target).text());

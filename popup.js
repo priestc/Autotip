@@ -104,7 +104,7 @@ setTimeout(function(){
                     normalize_ratios(tips);
 
                     $.each(tips, function(index, tip) {
-                        var img = "<img src='" + get_icon_for_currency(tip.currency) + "' width='50px', height='50px'>";
+                        var img = "<img src='" + get_icon_for_currency(tip.currency || 'btc') + "' width='50px', height='50px'>";
                         var recipient = "";
                         var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
 

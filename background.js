@@ -403,6 +403,10 @@ function set_icon(tab_id, status) {
         url = 'logos/autotip-logo-38-green.png'
     } else if (status == 'failed') {
         url = 'logos/autotip-logo-38-red.png'
+    } else if(status == 'music-untipped') {
+        url = 'logos/autotip-logo-38-yellow-note.png'
+    } else if (status == 'music-fully-tipped') {
+        url = 'logos/autotip-logo-38-green-note.png'
     }
 
     chrome.pageAction.show(tab_id);
@@ -432,39 +436,48 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return
     }
 
+    if(request.audio_start) {
+        // the page has found an audio tag, and will be listening for song tips.
+        set_icon(sender.tab.id, "music-untipped");
+        return
+    }
+
     if(request.audio_song_end) {
         // A song just ended, the content script has picked up the tips from the
         // <audio> element, and has sent the message back. This code handles that
         // message.
 
+        console.log("Audio song end");
+
         var tab_id = sender.tab.id;
         var new_tips = [];
         var added_to_existing = [];
+        set_icon(tab_id, "music-untipped");
 
-        $.each(tip_addresses[tab_id], function(i, existing_tip) {
-            // add new song to tip list
-            $.each(request.audio_song_end, function(i, new_tip) {
-                if(existing_tip.address == new_tip.address) {
-                    // add to the existing tip by adding on the ratio.
+        var all_existing = tip_addresses[tab_id] || [];
+        var incoming_tips = request.audio_song_end;
 
-                    new_tips.push({
-                        ratio: new_tip.ratio + existing_tip.ratio,
-                        address: new_tip.address,
-                        recipient: new_tip.recipient
-                    })
-                    added_to_existing.push(new_tip.address)
-                }
+        if(all_existing && all_existing.length > 0) {
+            $.each(all_existing, function(i, existing_tip) {
+                // add new song to tip list
+                $.each(incoming_tips, function(i, new_tip) {
+                    if(existing_tip.address == new_tip.address) {
+                        // add to the existing tip by adding on the ratio.
+                        existing_tip.ratio = new_tip.ratio + existing_tip.ratio,
+                        added_to_existing.push(new_tip.address);
+                    }
+                });
             });
-        });
+        }
 
         $.each(request.audio_song_end, function(i, tip) {
             if(added_to_existing.indexOf(tip.address) == -1) {
                 // this address was not added to an existing total
-                new_tips.push(tip)
+                new_tips.push(tip);
             }
         });
 
-        tip_addresses[tab_id] = new_tips;
+        tip_addresses[tab_id] = new_tips.concat(all_existing);
         return
     }
 
