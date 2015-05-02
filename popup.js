@@ -47,7 +47,8 @@ setTimeout(function(){
 
             $("#options_link").attr('href', chrome.extension.getURL("options.html"));
 
-            var tips = response.tips;
+            var tips = response.tips || [];
+            console.log("tips ->", tips);
 
             chrome.storage.sync.get({
                 daily_limit_start: null,
@@ -56,18 +57,28 @@ setTimeout(function(){
                 dollar_tip_amount: null,
                 all_tipped_addresses_today: null,
                 when_to_send: null,
-                pub_key: null,
+                pub_key: null
             }, function(items) {
                 $("#qr").qrcode({width: 100, height: 100, text: items.pub_key});
                 $("#tip_history").attr('href', 'https://blockchain.info/address/' + items.pub_key)
 
+                var all_tip_ratios = 0;
+                $.each(tips, function(i, tip) {
+                    all_tip_ratios += tip.ratio;
+                });
+
                 var dollar_tip_amount = items.dollar_tip_amount;
+                var total_dollar_tip_amount = dollar_tip_amount * all_tip_ratios;
 
                 if(tips.length == 1) {
-                    var button_text = "Send $" + dollar_tip_amount + " to this address";
+                    var button_text = "Send $" + total_dollar_tip_amount.toFixed(2) + " to this address";
+                } else if (tips.length > 1){
+                    var button_text = "Send $" + total_dollar_tip_amount.toFixed(2) + " to these " + tips.length + " addresses";
                 } else {
-                    var button_text = "Send $" + dollar_tip_amount + " to these " + tips.length + " addresses";
+                    var button_text = "No addresses yet";
+                    $("#tip_button").attr('disabled', 'disabled');
                 }
+
                 $("#tip_button").val(button_text).click(function() {
                     // when the 'tip now' buton is clicked, tell the background to send the tips.
                     // and prime the status box.
@@ -101,12 +112,14 @@ setTimeout(function(){
                         }
                     });
 
-                    normalize_ratios(tips);
-
                     $.each(tips, function(index, tip) {
                         var img = "<img src='" + get_icon_for_currency(tip.currency || 'btc') + "' width='50px', height='50px'>";
                         var recipient = "";
-                        var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
+                        if(tip.ratio <= 1) {
+                            var ratio = Number(tip.ratio * 100).toFixed(1) + "%";
+                        } else {
+                            var ratio = Number(tip.ratio.toFixed(3)) + "x";
+                        }
 
                         if(tip.recipient) {
                             recipient = "<big>" + tip.recipient + " (" + ratio + ")</big>";

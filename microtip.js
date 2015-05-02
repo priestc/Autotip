@@ -1,6 +1,6 @@
 var intervalID;
 
-function get_tips() {
+function parse_metatags() {
     var tips_on_this_page = [];
     var found_audio = false;
 
@@ -9,7 +9,7 @@ function get_tips() {
         var content = e.attr('content');
         if(content.toLowerCase() == 'audio') {
             found_audio = true;
-            return false; // break from loop
+            return;
         }
         tips_on_this_page.push({
             'currency': e.data('currency') || 'btc',
@@ -18,10 +18,10 @@ function get_tips() {
             'recipient': e.data('recipient')
         });
     });
-    if(found_audio) {
-        return "Audio"
-    }
-    return tips_on_this_page
+    return {
+        tips: tips_on_this_page,
+        audio: found_audio
+    };
 }
 
 // testcases:
@@ -52,7 +52,8 @@ chrome.storage.sync.get({
     domain_list: null,
     interval_seconds: null
 }, function(items) {
-    var tips = get_tips();
+    var metatags = parse_metatags();
+    var tips = metatags.tips;
 
     if(tips.length <= 0) {
         return // No tips found
@@ -80,9 +81,10 @@ chrome.storage.sync.get({
         });
     }
 
-    if(tips == 'Audio') {
-        chrome.runtime.sendMessage({audio_start: true}); // puts up the icon 
-        console.log("Audiotip enabled. Listening for song end events");
+    if(metatags.audio) {
+        // Audio mode has been enabled.
+        chrome.runtime.sendMessage({audio_start: true}); // puts up the icon
+        console.log("Audio Tag support enabled. Listening for song end events");
         $("audio").on("ended", function(event) {
             var tips = JSON.parse($(event.target).text());
             if(tips && tips[0] && tips[0].address) {
@@ -94,6 +96,10 @@ chrome.storage.sync.get({
     }
 
     console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
+
+    // make sure ratios don't add up to more than 1.0
+    normalize_ratios(tips);
+
     chrome.runtime.sendMessage({found_tips: tips}, function(response) {
         var already_tipped = response.already_tipped;
 
