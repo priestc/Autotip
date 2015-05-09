@@ -8,6 +8,7 @@ function save_options() {
     var blacklist_or_whitelist = $("input[name=blacklist_or_whitelist]:checked").val();
     var giveaway_participation = $("input[name=giveaway_participation]:checked").length;
     var show_notifications = $("input[name=show_notifications]:checked").length;
+    var min_audio_tip_seconds= $("input[name=min_audio_tip_seconds]").val();
 
     var domain_list_text = $("#domain_list_textarea").val();
     var domain_list = domain_list_text.trim().split('\n');
@@ -28,7 +29,8 @@ function save_options() {
         interval_seconds: interval_seconds,
         miner_fee: miner_fee,
         giveaway_participation: giveaway_participation,
-        show_notifications: show_notifications
+        show_notifications: show_notifications,
+        min_audio_tip_seconds: min_audio_tip_seconds
     }, function() {
         // Update status to let user know options were saved.
         var status = $('.status').text('Options saved.');
@@ -56,6 +58,7 @@ function fill_in_options() {
         miner_fee: null,
         giveaway_participation: null,
         show_notifications: null,
+        min_audio_tip_seconds: null
     }, function(items) {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=blacklist_or_whitelist][value=' + items.blacklist_or_whitelist + ']').attr('checked', 'checked');
@@ -63,6 +66,8 @@ function fill_in_options() {
         $('input[name=daily_tip_limit]').val(Number(items.daily_tip_limit).toFixed(2));
         $('input[name=interval_seconds]').val(items.interval_seconds);
         $('input[name=miner_fee]').val(items.miner_fee);
+        $("input[name=min_audio_tip_seconds]").val(items.min_audio_tip_seconds);
+
 
         $("#priv_key").text(items.priv_key);
         $('#deposit_address').text(items.pub_key);

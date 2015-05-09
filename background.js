@@ -85,6 +85,12 @@ chrome.storage.sync.get({
             show_notifications: true
         });
     }
+    if(!items.min_audio_tip_seconds) {
+        chrome.storage.sync.set({
+            min_audio_tip_seconds: 60
+        });
+    }
+
 });
 
 var dont_push = false;
@@ -581,7 +587,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 if(all.indexOf(address.address) < 0) {
                     // we have not tipped this address yet
                     set_icon(tab_id, 'pending');
-                    one_address_not_tipped = true
+                    one_address_not_tipped = true;
                     return false // break out of $.each
                 }
             });
