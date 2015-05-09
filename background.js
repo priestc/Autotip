@@ -87,6 +87,8 @@ chrome.storage.sync.get({
     }
 });
 
+var dont_push = false;
+
 var cents_per_btc_bitstamp;
 function get_price_from_bitstamp() {
     $.ajax({
@@ -189,7 +191,7 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 
 // end alarm code
 
-function send_tips(tips, autotip, tab_id) {
+function send_tips(tips, autotip, tab_id, audio_on_page) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
@@ -224,7 +226,14 @@ function send_tips(tips, autotip, tab_id) {
         ///// determine if we make the tip, or cancel the tip
         /////////////////////////////////////////////////////
 
-        var new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
+        var total_dollar_tip_amount = 0;
+        $.each(tips, function(i, tip) {
+            total_dollar_tip_amount += dollar_tip_amount * tip.ratio;
+        });
+
+        console.log("New calculated dollar tip amount:", total_dollar_tip_amount);
+
+        var new_accumulation = Number(total_dollar_tip_amount) + Number(usd_tipped_so_far_today);
 
         if(new_accumulation > daily_tip_limit && autotip) {
             cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
@@ -232,7 +241,7 @@ function send_tips(tips, autotip, tab_id) {
         }
 
         var cents_per_btc = get_price_from_winkdex();
-        console.log("winkdex returned", cents_per_btc, "cents/BTC")
+        console.log("winkdex returned", cents_per_btc, "cents/BTC");
         if(!cents_per_btc) {
             // when call to winkdex fails, null is returned.
             cancel_tip("Network Error: Could not get price from winkdex");
@@ -243,7 +252,7 @@ function send_tips(tips, autotip, tab_id) {
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        var page_btc_amount = dollar_tip_amount / cents_per_btc * 100;
+        var page_btc_amount = total_dollar_tip_amount / cents_per_btc * 100;
         var page_satoshi_amount = page_btc_amount * 1e8;
 
         var satoshi_fee = Math.floor(miner_fee_cents / cents_per_btc * 1e10);
@@ -289,8 +298,6 @@ function send_tips(tips, autotip, tab_id) {
             }
             return
         }
-
-        normalize_ratios(tips);
 
         var total_tip_amount_satoshi = 0;
         //var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
@@ -342,6 +349,10 @@ function send_tips(tips, autotip, tab_id) {
         console.log("Using fee of", satoshi_fee, "Satoshis");
         console.log("Pushing tx:", tx_hex);
 
+        if(dont_push) {
+            return
+        }
+
         $.ajax({
             url: "https://btc.blockr.io/api/v1/tx/push",
             type: 'post',
@@ -379,7 +390,12 @@ function send_tips(tips, autotip, tab_id) {
                     }, function() {
                         //console.log("notification made");
                     });
-                    set_icon(tab_id, "tipped");
+                }
+
+                if(audio_on_page) {
+                    set_icon(tab_id, 'music-fully-tipped');
+                } else {
+                    set_icon(tab_id, 'tipped');
                 }
 
                 if(giveaway_participation) {
@@ -447,37 +463,57 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // <audio> element, and has sent the message back. This code handles that
         // message.
 
-        console.log("Audio song end");
+        console.info("Audio song end", request.audio_song_end);
 
-        var tab_id = sender.tab.id;
-        var new_tips = [];
-        var added_to_existing = [];
-        set_icon(tab_id, "music-untipped");
+        chrome.storage.sync.get({
+            last_audio_tip: null,
+            min_audio_tip_seconds: 60
+        }, function(items) {
+            var min_audio_tip_seconds = items.min_audio_tip_seconds;
+            var last_audio_tip = items.last_audio_tip;
+            var last_tipped_seconds_ago = null;
 
-        var all_existing = tip_addresses[tab_id] || [];
-        var incoming_tips = request.audio_song_end;
-
-        if(all_existing && all_existing.length > 0) {
-            $.each(all_existing, function(i, existing_tip) {
-                // add new song to tip list
-                $.each(incoming_tips, function(i, new_tip) {
-                    if(existing_tip.address == new_tip.address) {
-                        // add to the existing tip by adding on the ratio.
-                        existing_tip.ratio = new_tip.ratio + existing_tip.ratio,
-                        added_to_existing.push(new_tip.address);
-                    }
-                });
-            });
-        }
-
-        $.each(request.audio_song_end, function(i, tip) {
-            if(added_to_existing.indexOf(tip.address) == -1) {
-                // this address was not added to an existing total
-                new_tips.push(tip);
+            if(last_audio_tip) {
+                var last_tipped_seconds_ago = ((new Date()) - last_audio_tip) / 1000;
             }
-        });
+            if(last_tipped_seconds_ago && last_tipped_seconds_ago < min_audio_tip_seconds) {
+                console.info("rejecting tip because the last audio tip was only", last_tipped_seconds_ago, "seconds ago.");
+                return
+            }
 
-        tip_addresses[tab_id] = new_tips.concat(all_existing);
+            var tab_id = sender.tab.id;
+            var new_tips = [];
+            var added_to_existing = [];
+            set_icon(tab_id, "music-untipped");
+
+            var all_existing = tip_addresses[tab_id] || [];
+            var incoming_tips = request.audio_song_end;
+
+            if(all_existing && all_existing.length > 0) {
+                $.each(all_existing, function(i, existing_tip) {
+                    // add new song to tip list
+                    $.each(incoming_tips, function(i, new_tip) {
+                        if(existing_tip.address == new_tip.address) {
+                            // add to the existing tip by adding on the ratio.
+                            existing_tip.ratio = new_tip.ratio + existing_tip.ratio,
+                            added_to_existing.push(new_tip.address);
+                        }
+                    });
+                });
+            }
+
+            $.each(request.audio_song_end, function(i, tip) {
+                if(added_to_existing.indexOf(tip.address) == -1) {
+                    // this address was not added to an existing total
+                    new_tips.push(tip);
+                }
+            });
+
+            tip_addresses[tab_id] = new_tips.concat(all_existing);
+            chrome.storage.sync.set({
+                last_audio_tip: new Date(),
+            });
+        });
         return
     }
 
@@ -563,13 +599,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false, request.tab_id || sender.tab.id);
+        send_tips(request.tips, false, request.tab_id || sender.tab.id, false);
         return
     }
 
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
-        send_tips(request.tips, true, sender.tab.id);
+        send_tips(request.tips, true, sender.tab.id, false);
         return
     }
     if(request.mode && request.domain) {

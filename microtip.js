@@ -64,7 +64,7 @@ chrome.storage.sync.get({
         // determine if this page's domain jives with the users black/whitelists.
         var pblwl = pass_blacklist_and_whitelist(
             items.blacklist_or_whitelist, items.domain_list, window.location.host
-        )
+        );
     }
 
     if(!pblwl) {
@@ -84,18 +84,17 @@ chrome.storage.sync.get({
     if(metatags.audio) {
         // Audio mode has been enabled.
         chrome.runtime.sendMessage({audio_start: true}); // puts up the icon
-        console.log("Audio Tag support enabled. Listening for song end events");
+        //console.log("Audio Tag support enabled. Listening for song end events");
         $("audio").on("ended", function(event) {
             var tips = JSON.parse($(event.target).text());
             if(tips && tips[0] && tips[0].address) {
                 chrome.runtime.sendMessage({audio_song_end: tips});
-                console.log('Autotip caught audio.end event:', tips);
+                //console.log('Autotip caught audio.end event with tips:', tips);
             }
         });
-        return;
     }
 
-    console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
+    //console.log("Autotip extension found " + tips.length + " microtip meta tags on this page");
 
     // make sure ratios don't add up to more than 1.0
     normalize_ratios(tips);
