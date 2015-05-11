@@ -398,11 +398,10 @@ function send_tips(tips, autotip, tab_id) {
                     });
                 }
 
+                set_icon(tab_id, 'tipped');
+
                 if(audio_enabled[tab_id]) {
-                    set_icon(tab_id, 'music-fully-tipped');
                     tip_addresses[tab_id] = undefined;
-                } else {
-                    set_icon(tab_id, 'tipped');
                 }
 
                 if(giveaway_participation) {
@@ -420,16 +419,22 @@ function send_tips(tips, autotip, tab_id) {
 function set_icon(tab_id, status) {
     var url = 'logos/autotip-logo-38-black.png'; // black
 
-    if(status == 'pending') {
-        url = 'logos/autotip-logo-38-yellow.png';
-    } else if (status == 'tipped') {
-        url = 'logos/autotip-logo-38-green.png';
-    } else if (status == 'failed') {
-        url = 'logos/autotip-logo-38-red.png';
-    } else if(status == 'music-untipped') {
-        url = 'logos/note-yellow-38.png';
-    } else if (status == 'music-fully-tipped') {
-        url = 'logos/note-green-38.png';
+    if(audio_enabled[tab_id]) {
+        url = 'logos/note-black-38.png';
+
+        if(status == 'pending') {
+            url = 'logos/note-yellow-38.png';
+        } else if (status == 'tipped') {
+            url = 'logos/note-green-38.png';
+        }
+    } else {
+        if(status == 'pending') {
+            url = 'logos/autotip-logo-38-yellow.png';
+        } else if (status == 'tipped') {
+            url = 'logos/autotip-logo-38-green.png';
+        } else if (status == 'failed') {
+            url = 'logos/autotip-logo-38-red.png';
+        }
     }
 
     chrome.pageAction.show(tab_id);
@@ -486,7 +491,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             var tab_id = sender.tab.id;
             var new_tips = [];
             var added_to_existing = [];
-            set_icon(tab_id, "music-untipped");
+            set_icon(tab_id, "pending");
 
             var all_existing = tip_addresses[tab_id] || [];
             var incoming_tips = request.audio_song_end;
@@ -580,12 +585,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         var one_address_not_tipped = false;
 
         if(request.found_tips.audio) {
-            var pending_icon = "music-untipped";
-            var tipped_icon = 'music-fully-tipped';
             audio_enabled[tab_id] = true;
         } else {
-            var pending_icon = 'pending';
-            var tipped_icon = 'tipped';
             audio_enabled[tab_id] = false;
         }
 
@@ -597,14 +598,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             $.each(request.found_tips.tips, function(index, address) {
                 if(all.indexOf(address.address) < 0) {
                     // we have not tipped this address yet
-                    set_icon(tab_id, pending_icon);
+                    set_icon(tab_id, "pending");
                     one_address_not_tipped = true;
                     return false // break out of $.each
                 }
             });
             if(!one_address_not_tipped) {
                 // already tipped all addresses, use green icon
-                set_icon(tab_id, tipped_icon);
+                set_icon(tab_id, "tipped");
             }
             tip_addresses[tab_id] = request.found_tips.tips;
             sendResponse({
