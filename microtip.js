@@ -50,7 +50,7 @@ chrome.storage.sync.get({
     when_to_send: null,
     blacklist_or_whitelist: null,
     domain_list: null,
-    interval_seconds: null
+    interval_seconds: null,
 }, function(items) {
     var metatags = parse_metatags();
     var tips = metatags.tips;
@@ -81,9 +81,8 @@ chrome.storage.sync.get({
         });
     }
 
-    if(metatags.audio) {
+    if(pblwl && metatags.audio) {
         // Audio mode has been enabled.
-        chrome.runtime.sendMessage({audio_start: true}); // puts up the icon
         //console.log("Audio Tag support enabled. Listening for song end events");
         $("audio").on("ended", function(event) {
             var tips = JSON.parse($(event.target).text());
@@ -99,16 +98,16 @@ chrome.storage.sync.get({
     // make sure ratios don't add up to more than 1.0
     normalize_ratios(tips);
 
-    chrome.runtime.sendMessage({found_tips: tips}, function(response) {
+    chrome.runtime.sendMessage({found_tips: {tips: tips, audio: metatags.audio}}, function(response) {
         var already_tipped = response.already_tipped;
 
         if(pblwl && items.when_to_send == '5mins' && !already_tipped) {
-            var five_minute_counter_start = new Date();
+            var interval_counter_start = new Date();
             intervalID = setInterval(function() {
                 // update popup status every 1 second. After 5 minutes (or whatever the setting is), make the tip
-                var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - five_minute_counter_start) / 1000));
+                var seconds_to_go = Math.floor(items.interval_seconds - ((new Date() - interval_counter_start) / 1000));
                 if(seconds_to_go <= 0) {
-                    chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
+                    chrome.runtime.sendMessage({perform_tip: 'auto'});
                     console.log(items.interval_seconds, 'seconds past, will try to make tip.');
                     clearInterval(intervalID);
                 } else {
@@ -116,9 +115,9 @@ chrome.storage.sync.get({
                     chrome.runtime.sendMessage({popup_timer: msg});
                 }
             }, 1000);
-        } else if(pblwl && items.when_to_send == 'immediately' && !already_tipped) {
+        } else if(pblwl && items.when_to_send == 'immediately' && !already_tipped && !metatags.audio) {
             // go ahead and make the tip automatically.
-            chrome.runtime.sendMessage({tips: tips, perform_tip: 'auto'});
+            chrome.runtime.sendMessage({perform_tip: 'auto'});
         }
     });
 });

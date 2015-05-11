@@ -197,7 +197,7 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 
 // end alarm code
 
-function send_tips(tips, autotip, tab_id, audio_on_page) {
+function send_tips(tips, autotip, tab_id) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
@@ -215,7 +215,7 @@ function send_tips(tips, autotip, tab_id, audio_on_page) {
         one_per_address: null,
         miner_fee: null,
         giveaway_participation: null,
-        show_notifications: null,
+        show_notifications: null
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
@@ -258,7 +258,7 @@ function send_tips(tips, autotip, tab_id, audio_on_page) {
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        var page_btc_amount = total_dollar_tip_amount / cents_per_btc * 100;
+        var page_btc_amount = dollar_tip_amount / cents_per_btc * 100;
         var page_satoshi_amount = page_btc_amount * 1e8;
 
         var satoshi_fee = Math.floor(miner_fee_cents / cents_per_btc * 1e10);
@@ -398,8 +398,9 @@ function send_tips(tips, autotip, tab_id, audio_on_page) {
                     });
                 }
 
-                if(audio_on_page) {
+                if(audio_enabled[tab_id]) {
                     set_icon(tab_id, 'music-fully-tipped');
+                    tip_addresses[tab_id] = undefined;
                 } else {
                     set_icon(tab_id, 'tipped');
                 }
@@ -420,15 +421,15 @@ function set_icon(tab_id, status) {
     var url = 'logos/autotip-logo-38-black.png'; // black
 
     if(status == 'pending') {
-        url = 'logos/autotip-logo-38-yellow.png'
+        url = 'logos/autotip-logo-38-yellow.png';
     } else if (status == 'tipped') {
-        url = 'logos/autotip-logo-38-green.png'
+        url = 'logos/autotip-logo-38-green.png';
     } else if (status == 'failed') {
-        url = 'logos/autotip-logo-38-red.png'
+        url = 'logos/autotip-logo-38-red.png';
     } else if(status == 'music-untipped') {
-        url = 'logos/autotip-logo-38-yellow-note.png'
+        url = 'logos/note-yellow-38.png';
     } else if (status == 'music-fully-tipped') {
-        url = 'logos/autotip-logo-38-green-note.png'
+        url = 'logos/note-green-38.png';
     }
 
     chrome.pageAction.show(tab_id);
@@ -449,18 +450,13 @@ function set_icon(tab_id, status) {
 //);
 
 var whitelist_blacklist_status = {};
-var tip_addresses = {};
+var tip_addresses = {}; // stores all tips, indexed by tab_id
+var audio_enabled = {}; // keeps track of which tabs have the audio tag API enabled. indexed by tab_id.
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // dispatches all messages
 
     if(request.get_btc_price) {
         sendResponse({price: get_price_from_winkdex()});
-        return
-    }
-
-    if(request.audio_start) {
-        // the page has found an audio tag, and will be listening for song tips.
-        set_icon(sender.tab.id, "music-untipped");
         return
     }
 
@@ -483,7 +479,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 var last_tipped_seconds_ago = ((new Date()) - last_audio_tip) / 1000;
             }
             if(last_tipped_seconds_ago && last_tipped_seconds_ago < min_audio_tip_seconds) {
-                console.info("rejecting tip because the last audio tip was only", last_tipped_seconds_ago, "seconds ago.");
+                console.warn("Rejecting tip because the last audio tip was only", last_tipped_seconds_ago, "seconds ago.");
                 return
             }
 
@@ -494,6 +490,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
             var all_existing = tip_addresses[tab_id] || [];
             var incoming_tips = request.audio_song_end;
+
+            normalize_ratios(incoming_tips);
 
             if(all_existing && all_existing.length > 0) {
                 $.each(all_existing, function(i, existing_tip) {
@@ -511,6 +509,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             $.each(request.audio_song_end, function(i, tip) {
                 if(added_to_existing.indexOf(tip.address) == -1) {
                     // this address was not added to an existing total
+                    if(!tip.currency) {
+                        tip.currency = 'btc';
+                    }
                     new_tips.push(tip);
                 }
             });
@@ -578,24 +579,34 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         var tab_id = sender.tab.id;
         var one_address_not_tipped = false;
 
+        if(request.found_tips.audio) {
+            var pending_icon = "music-untipped";
+            var tipped_icon = 'music-fully-tipped';
+            audio_enabled[tab_id] = true;
+        } else {
+            var pending_icon = 'pending';
+            var tipped_icon = 'tipped';
+            audio_enabled[tab_id] = false;
+        }
+
         chrome.storage.sync.get({
             all_tipped_addresses_today: null,
         }, function(items) {
             // Determine if all addresses on the page have been tipped today
             var all = items.all_tipped_addresses_today;
-            $.each(request.found_tips, function(index, address) {
+            $.each(request.found_tips.tips, function(index, address) {
                 if(all.indexOf(address.address) < 0) {
                     // we have not tipped this address yet
-                    set_icon(tab_id, 'pending');
+                    set_icon(tab_id, pending_icon);
                     one_address_not_tipped = true;
                     return false // break out of $.each
                 }
             });
             if(!one_address_not_tipped) {
                 // already tipped all addresses, use green icon
-                set_icon(tab_id, 'tipped');
+                set_icon(tab_id, tipped_icon);
             }
-            tip_addresses[tab_id] = request.found_tips;
+            tip_addresses[tab_id] = request.found_tips.tips;
             sendResponse({
                 already_tipped: !one_address_not_tipped
             });
@@ -605,14 +616,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false, request.tab_id || sender.tab.id, false);
-        return
+        var tab_id = request.tab_id || tab_id;
+        send_tips(tip_addresses[tab_id], false, tab_id);
+        return;
     }
 
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
-        send_tips(request.tips, true, sender.tab.id, false);
-        return
+        var tab_id = sender.tab.id;
+        send_tips(tip_addresses[tab_id], true, tab_id);
+        return;
     }
     if(request.mode && request.domain) {
         // this page's autotip was canceled because it was not in whitelist
@@ -634,7 +647,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             val = ['allowed', 'blacklist', request.domain];
         }
         whitelist_blacklist_status[tab_id] = val;
-        return
+        return;
     }
 
     if(request.add_or_remove && request.domain) {
@@ -651,7 +664,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
             console.log('domain list is', domain_list);
 
-            if(add_or_remove == 'remove'){
+            if(add_or_remove == 'remove') {
                 var index = domain_list.indexOf(clicked_domain);
                 domain_list.splice(index, 1);
                 console.log("removed from domain list");
