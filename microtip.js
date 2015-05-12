@@ -100,7 +100,9 @@ chrome.storage.sync.get({
 
     chrome.runtime.sendMessage({found_tips: {tips: tips, audio: metatags.audio}}, function(response) {
         var already_tipped = response.already_tipped;
-
+        if(metatags.audio) {
+            return; // different rules handled another place in the code.
+        }
         if(pblwl && items.when_to_send == '5mins' && !already_tipped) {
             var interval_counter_start = new Date();
             intervalID = setInterval(function() {
@@ -115,7 +117,7 @@ chrome.storage.sync.get({
                     chrome.runtime.sendMessage({popup_timer: msg});
                 }
             }, 1000);
-        } else if(pblwl && items.when_to_send == 'immediately' && !already_tipped && !metatags.audio) {
+        } else if(pblwl && items.when_to_send == 'immediately' && !already_tipped) {
             // go ahead and make the tip automatically.
             chrome.runtime.sendMessage({perform_tip: 'auto'});
         }

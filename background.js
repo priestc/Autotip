@@ -426,6 +426,8 @@ function set_icon(tab_id, status) {
             url = 'logos/note-yellow-38.png';
         } else if (status == 'tipped') {
             url = 'logos/note-green-38.png';
+        } else if (status == 'failed') {
+            url = 'logos/note-red-38.png';
         }
     } else {
         if(status == 'pending') {
@@ -489,8 +491,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             }
 
             var tab_id = sender.tab.id;
-            var new_tips = [];
-            var added_to_existing = [];
             set_icon(tab_id, "pending");
 
             var all_existing = tip_addresses[tab_id] || [];
@@ -498,31 +498,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
             normalize_ratios(incoming_tips);
 
-            if(all_existing && all_existing.length > 0) {
-                $.each(all_existing, function(i, existing_tip) {
-                    // add new song to tip list
-                    $.each(incoming_tips, function(i, new_tip) {
-                        if(existing_tip.address == new_tip.address) {
-                            // add to the existing tip by adding on the ratio.
-                            existing_tip.ratio = new_tip.ratio + existing_tip.ratio,
-                            added_to_existing.push(new_tip.address);
-                        }
-                    });
-                });
-            }
-
-            $.each(request.audio_song_end, function(i, tip) {
-                if(added_to_existing.indexOf(tip.address) == -1) {
-                    // this address was not added to an existing total
-                    if(!tip.currency) {
-                        tip.currency = 'btc';
-                    }
-                    new_tips.push(tip);
-                }
-            });
-
-            tip_addresses[tab_id] = new_tips.concat(all_existing);
+            tip_addresses[tab_id] = merge_tips(all_existing, incoming_tips);
             chrome.storage.sync.set({
+                // record when this event was done for rate limiting purposes.
                 last_audio_tip: new Date(),
             });
         });

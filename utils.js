@@ -182,3 +182,33 @@ function find_giveaway_submissions(outputs, cents_per_btc) {
         }
     });
 }
+
+function merge_tips(existing_tips, incoming_tips) {
+    var added_to_existing = [];
+    var new_tips = [];
+    if(existing_tips && existing_tips.length > 0) {
+        $.each(existing_tips, function(i, existing_tip) {
+            // add new song to tip list
+            $.each(incoming_tips, function(i, new_tip) {
+                if(existing_tip.address == new_tip.address) {
+                    // add to the existing tip by adding on the ratio.
+                    existing_tip.ratio = new_tip.ratio + existing_tip.ratio,
+                    added_to_existing.push(new_tip.address);
+                }
+            });
+        });
+    }
+
+    $.each(incoming_tips, function(i, tip) {
+        if(added_to_existing.indexOf(tip.address) == -1) {
+            // this address was not added to an existing total
+            if(!tip.currency) {
+                // api requirement, allow empty currency value, use BTC in that case.
+                tip.currency = 'btc';
+            }
+            new_tips.push(tip);
+        }
+    });
+
+    return new_tips.concat(existing_tips);
+}
