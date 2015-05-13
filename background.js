@@ -11,7 +11,10 @@ chrome.storage.sync.get({
     interval_seconds: null,
     miner_fee: null,
     giveaway_participation: null,
-    show_notifications: null
+    show_notifications: null,
+    min_audio_tip_seconds: null,
+    send_music_tip_every_x_songs: null,
+    song_autotip: null
 }, function(items) {
     // the below function gets called whenever:
     //   1. a new version is installed,
@@ -88,6 +91,16 @@ chrome.storage.sync.get({
     if(!items.min_audio_tip_seconds) {
         chrome.storage.sync.set({
             min_audio_tip_seconds: 60
+        });
+    }
+    if(!items.send_music_tip_every_x_songs) {
+        chrome.storage.sync.set({
+            send_music_tip_every_x_songs: 5
+        });
+    }
+    if(!items.song_autotip) {
+        chrome.storage.sync.set({
+            song_autotip: "on"
         });
     }
 

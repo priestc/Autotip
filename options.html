@@ -57,6 +57,10 @@
 
             <h2>Audio Tipping</h2>
             Minimum seconds between audio tips: <input type="number" name="min_audio_tip_seconds"><br>
+            <small>This is to prevent a malicious page from sending lots of tips really fast, cleaning out your balance.</small><br>
+            <br>
+            <input type="radio" name="song_autotip" value="off"> Never tip songs automatically<br>
+            <input type="radio" name="song_autotip" value="on"> Automatically send tip every <input type="number" name="send_music_tip_every_x_songs"> Songs.
 
             <h2>Tipping Mode</h2>
             <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking <strong>immediately</strong> upon page load.<br>
