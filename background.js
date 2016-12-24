@@ -187,7 +187,7 @@ function send_tips(tips, autotip) {
 
         console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
 
-        var all_utxos = unspent_outputs_insight(pub_key);
+        var all_utxos = unspent_outputs_multiexplorer(pub_key);
         var utxos = [];
         var total_amount = 0;
         $.each(all_utxos, function(index, utxo) {
@@ -252,9 +252,9 @@ function send_tips(tips, autotip) {
         console.log("Pushing tx:", tx_hex);
 
         $.ajax({
-            url: "https://btc.blockr.io/api/v1/tx/push",
+            url: "https://multiexplorer.com/api/push_tx/fallback",
             type: 'post',
-            data: {hex: tx_hex},
+            data: {tx: tx_hex, currency: "btc"},
             success: function(response) {
                 var total_tip_amount_dollar = total_tip_amount_satoshi * cents_per_btc / 1e10;
                 var new_dollar_tip_amount_today = total_tip_amount_dollar + usd_tipped_so_far_today;
@@ -277,8 +277,8 @@ function send_tips(tips, autotip) {
 
                 chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
             },
-            error: function() {
-                cancel_tip("Pushtx failed");
+            error: function(jqXHR, textStatus, errorThrown) {
+                cancel_tip("Pushtx failed: " + jqXHR.statusText);
             }
         });
     });

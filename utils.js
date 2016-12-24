@@ -1,7 +1,13 @@
 function clean_currency(currency) {
     // make sure the curency code is a correct code, allowing for
     // upper case, lower case and the full currency name.
+
+    if(!currency) {
+        return "btc";
+    }
+
     var ll = currency.toLowerCase();
+
     if(ll == 'btc' || ll == 'bitcoin') {
         return 'btc';
     }
@@ -61,6 +67,31 @@ function unspent_outputs_insight(pub_key) {
                     "address": pub_key,
                     "scriptPubKey": output['scriptPubKey'],
                     "amount":  output['amount']
+                });
+            });
+        }
+    });
+    return outputs;
+}
+
+function unspent_outputs_multiexplorer(pub_key) {
+    // get unspent outputs from multiexplorer API.
+    var outputs = [];
+    $.ajax({
+        url: "https://multiexplorer.com/api/unspent_outputs/fallback?currency=btc&address=" + pub_key,
+        type: "get",
+        async: false,
+        success: function(response) {
+            console.log("utxo response:", response);
+            $.each(response.utxos, function(index, output) {
+                var vout = parseInt(output['output'].split(":")[1]);
+                var txid = output['output'].split(":")[0];
+                outputs.push({
+                    "txid": txid,
+                    "vout": vout,
+                    "script": output['scriptPubKey'],
+                    "address": pub_key,
+                    "amount":  output['amount'] / 1e8
                 });
             });
         }
