@@ -6,6 +6,11 @@ function save_options() {
     var one_per_address = $("input[name=one_per_address]:checked").length;
     var beep_on_tip = $("input[name=beep_on_tip]:checked").length;
     var blacklist_or_whitelist = $("input[name=blacklist_or_whitelist]:checked").val();
+    var giveaway_participation = $("input[name=giveaway_participation]:checked").length;
+    var show_notifications = $("input[name=show_notifications]:checked").length;
+    var min_audio_tip_seconds = $("input[name=min_audio_tip_seconds]").val();
+    var song_autotip = $("input[name=song_autotip]:checked").val();
+    var send_music_tip_every_x_songs = $("input[name=send_music_tip_every_x_songs]").val();
 
     var domain_list_text = $("#domain_list_textarea").val();
     var domain_list = domain_list_text.trim().split('\n');
@@ -24,7 +29,12 @@ function save_options() {
         blacklist_or_whitelist: blacklist_or_whitelist,
         domain_list: domain_list,
         interval_seconds: interval_seconds,
-        miner_fee: miner_fee
+        miner_fee: miner_fee,
+        giveaway_participation: giveaway_participation,
+        show_notifications: show_notifications,
+        min_audio_tip_seconds: min_audio_tip_seconds,
+        song_autotip: song_autotip,
+        send_music_tip_every_x_songs: send_music_tip_every_x_songs
     }, function() {
         // Update status to let user know options were saved.
         var status = $('.status').text('Options saved.');
@@ -49,7 +59,12 @@ function fill_in_options() {
         blacklist_or_whitelist: null,
         domain_list: null,
         interval_seconds: null,
-        miner_fee: null
+        miner_fee: null,
+        giveaway_participation: null,
+        show_notifications: null,
+        min_audio_tip_seconds: null,
+        song_autotip: null,
+        send_music_tip_every_x_songs: null
     }, function(items) {
         $('input[name=when_to_send][value=' + items.when_to_send + ']').attr('checked', 'checked');
         $('input[name=blacklist_or_whitelist][value=' + items.blacklist_or_whitelist + ']').attr('checked', 'checked');
@@ -57,6 +72,9 @@ function fill_in_options() {
         $('input[name=daily_tip_limit]').val(Number(items.daily_tip_limit).toFixed(2));
         $('input[name=interval_seconds]').val(items.interval_seconds);
         $('input[name=miner_fee]').val(items.miner_fee);
+        $("input[name=min_audio_tip_seconds]").val(items.min_audio_tip_seconds);
+        $('input[name=song_autotip][value=' + items.song_autotip + ']').attr('checked', 'checked');
+        $('input[name=send_music_tip_every_x_songs]').val(items.send_music_tip_every_x_songs);
 
         $("#priv_key").text(items.priv_key);
         $('#deposit_address').text(items.pub_key);
@@ -68,16 +86,29 @@ function fill_in_options() {
         if(items.beep_on_tip) {
             $('input[name=beep_on_tip]').attr('checked', 'checked');
         }
+        if(items.giveaway_participation) {
+            $("input[name=giveaway_participation]").attr("checked", "checked");
+        }
+        if(items.show_notifications) {
+            $("input[name=show_notifications]").attr("checked", "checked");
+        }
 
         $("#domain_list_textarea").text(items.domain_list.join("\n"));
 
-        $.get("https://blockchain.info/rawaddr/" + items.pub_key, function(response) {
-            var balance = response['final_balance'] / 1e8; //replace spinner
-            chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
-                var cents_per_btc = response.price;
-                var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
-                $('#current_balance').text(balance + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
-            });
+        $.ajax({
+            url: "https://blockchain.info/rawaddr/" + items.pub_key,
+            type: "get",
+            success: function(response) {
+                var balance = response['final_balance'] / 1e8; //replace spinner
+                chrome.runtime.sendMessage({get_btc_price: true}, function(response) {
+                    var cents_per_btc = response.price;
+                    var fiat_amount = Number(cents_per_btc * balance / 100).toFixed(2);
+                    $('.current_balance').text(balance.toFixed(8) + " BTC ($" + fiat_amount +" USD)" ); //replace spinner
+                });
+            },
+            error: function(xhr, status, error) {
+                $('.current_balance').text("Network Error: " + status + error); //replace spinner
+            }
         });
     });
 }

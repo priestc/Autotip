@@ -9,8 +9,19 @@ chrome.storage.sync.get({
     blacklist_or_whitelist: null,
     domain_list: null,
     interval_seconds: null,
-    miner_fee: null
+    miner_fee: null,
+    giveaway_participation: null,
+    show_notifications: null,
+    min_audio_tip_seconds: null,
+    send_music_tip_every_x_songs: null,
+    song_autotip: null
 }, function(items) {
+    // the below function gets called whenever:
+    //   1. a new version is installed,
+    //   2. The extension is restarted
+    //
+    // This function handles setting the default values for all settings.
+
     if(!items.pub_key || !items.priv_key) {
         // if keys have not been generated, do so now and save them.
         // this code only gets called when the extension first gets installed.
@@ -67,7 +78,54 @@ chrome.storage.sync.get({
             miner_fee: 0.01
         });
     }
+    if(!items.giveaway_participation) {
+        chrome.storage.sync.set({
+            giveaway_participation: true
+        });
+    }
+    if(!items.show_notifications) {
+        chrome.storage.sync.set({
+            show_notifications: true
+        });
+    }
+    if(!items.min_audio_tip_seconds) {
+        chrome.storage.sync.set({
+            min_audio_tip_seconds: 60
+        });
+    }
+    if(!items.send_music_tip_every_x_songs) {
+        chrome.storage.sync.set({
+            send_music_tip_every_x_songs: 5
+        });
+    }
+    if(!items.song_autotip) {
+        chrome.storage.sync.set({
+            song_autotip: "on"
+        });
+    }
+
 });
+
+var dont_push = false;
+
+var cents_per_btc_bitstamp;
+function get_price_from_bitstamp() {
+    $.ajax({
+        url: "https://www.bitstamp.net/api/ticker/",
+        type: 'get',
+        async: false,
+        success: function(response) {
+            if (response['last'] > 0) {
+                cents_per_btc_bitstamp = parseFloat(response['last'] * 100);
+            } else {
+                console.error("bitstamp returned 0 (??)");
+                cents_per_btc_bitstamp = null;
+            }
+        }
+    });
+
+    return cents_per_btc_bitstamp
+}
 
 
 var cents_per_btc, btc_price_fetch_date;
@@ -86,13 +144,26 @@ function get_price_from_winkdex() {
             type: 'get',
             async: false,
             success: function(response) {
-                cents_per_btc = response['price'];
+                if (response['price'] > 0) {
+                    cents_per_btc = response['price'];
+                } else {
+                    console.error("price returned 0 (??)")
+                    console.log("trying to get price from bitstamp")
+                    cents_per_btc = get_price_from_bitstamp();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Call to get btc price failed", status, error)
+                cents_per_btc = null;
+                btc_price_fetch_date = null;
             }
         });
-        btc_price_fetch_date = new Date();
-        //console.log("Made call to winkdex:", cents_per_btc / 100, "USD/BTC");
+        if(cents_per_btc > 0) {
+            btc_price_fetch_date = new Date();
+            console.log("Made call to get BTC price:", cents_per_btc / 100, "USD/BTC");
+        }
     } else {
-        //console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
+        console.log("Using old value for bitcoin price:", cents_per_btc / 100, "USD/BTC from", btc_price_fetch_date);
     }
     return cents_per_btc;
 }
@@ -102,25 +173,51 @@ function cancel_tip(msg) {
     chrome.runtime.sendMessage({popup_status: msg, fail: true});
 }
 
-function reset_interval() {
-    // for testing and debugging
-    chrome.storage.sync.set({
-        usd_tipped_so_far_today: 0,
-        daily_limit_start: new Date().getTime(),
-        all_tipped_addresses_today: []
-    });
+/////////////////////////////////////////
+//
+//  Alarm for resetting all daily limits
+//
+/////////////////////////////////////////
+
+function make_next_alarm() {
+    var end_of_day = new Date();
+    end_of_day.setHours(23,59,59,999);
+    console.log("Made alarm for", end_of_day);
+    chrome.alarms.create("EndOfDay", {when: end_of_day.getTime()});
 }
 
-function send_tips(tips, autotip) {
+chrome.runtime.onInstalled.addListener(make_next_alarm);
+
+chrome.alarms.onAlarm.addListener(function(alarm) {
+    // All variables that relate to daily limits or list of domains
+    // tipped today get resetted. This code need to be called
+    // periotically on a daily basis.
+
+    if(alarm.name == "EndOfDay") {
+        console.log("Running End of Day alarm, resetting all daily values");
+
+        chrome.storage.sync.set({
+            usd_tipped_so_far_today: 0,
+            all_tipped_addresses_today: [],
+            all_tipped_domains_today: []
+        }, function() {
+            // hopefully by now 0.001 seconds have passed
+            // so this alarm gets made for the end of the next day.
+            make_next_alarm();
+        });
+    }
+});
+
+// end alarm code
+
+function send_tips(tips, autotip, tab_id) {
     // Make the bitcoin transaction and push it to the network.
     // * The first argument is a list of addresses and the corresponding ratio
     // * The second argument is a boolean determining if this tip is being sent
     // via manual or automatically.
-    // * The third argument is a function that corresponds to chrome's message system
-    // that returns the status of this tip to the popup.
+    // * The third argument is the tab id that the tip is going to.
 
     chrome.storage.sync.get({
-        daily_limit_start: null,
         usd_tipped_so_far_today: null,
         daily_tip_limit: null,
         pub_key: null,
@@ -129,84 +226,104 @@ function send_tips(tips, autotip) {
         all_tipped_addresses_today: [],
         beep_on_tip: null,
         one_per_address: null,
-        miner_fee: null
+        miner_fee: null,
+        giveaway_participation: null,
+        show_notifications: null
     }, function(items) {
         var pub_key = items.pub_key;
         var priv_key = items.priv_key;
         var dollar_tip_amount = items.dollar_tip_amount;
         var usd_tipped_so_far_today = items.usd_tipped_so_far_today;
-        var daily_limit_start = items.daily_limit_start;
         var daily_tip_limit = items.daily_tip_limit;
         var all_tipped_addresses_today = items.all_tipped_addresses_today;
         var one_per_address = items.one_per_address;
         var miner_fee_cents = items.miner_fee;
-
-        var now_timestamp = new Date().getTime();
-        var day_ago_timestamp = now_timestamp - (60 * 60 * 24 * 1000);
+        var giveaway_participation = items.giveaway_participation;
+        var show_notifications = items.show_notifications;
 
         /////////////////////////////////////////////////////
         ///// determine if we make the tip, or cancel the tip
         /////////////////////////////////////////////////////
 
-        var new_accumulation = 0;
+        var total_dollar_tip_amount = 0;
+        $.each(tips, function(i, tip) {
+            total_dollar_tip_amount += dollar_tip_amount * tip.ratio;
+        });
 
-        if(daily_limit_start == 'none' || daily_limit_start < day_ago_timestamp) {
-            // it was over a day ago since we've been keeping track, reset the interval
-            console.log("Resetting daily interval now. Old interval started:", new Date(daily_limit_start))
-            chrome.storage.sync.set({
-                usd_tipped_so_far_today: 0,
-                daily_limit_start: now_timestamp,
-                all_tipped_addresses_today: []
-            });
-            daily_limit_start = now_timestamp;
-            usd_tipped_so_far_today = 0;
-            all_tipped_addresses_today = [];
-        } else {
-            // Make sure this tip isn't going to put us over the daily tipping limit
-            new_accumulation = Number(dollar_tip_amount) + Number(usd_tipped_so_far_today);
-            if(new_accumulation > daily_tip_limit && autotip) {
-                cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
-                return
-            }
+        console.log("New calculated dollar tip amount:", total_dollar_tip_amount);
+
+        var new_accumulation = Number(total_dollar_tip_amount) + Number(usd_tipped_so_far_today);
+
+        if(new_accumulation > daily_tip_limit && autotip) {
+            cancel_tip("Canceling tip! Over daily limit for autotip:", usd_tipped_so_far_today);
+            return
         }
 
-        console.log("Interval start:", new Date(daily_limit_start));
-        console.log("All addresses today:", all_tipped_addresses_today)
+        var cents_per_btc = get_price_from_winkdex();
+        console.log("winkdex returned", cents_per_btc, "cents/BTC");
+        if(!cents_per_btc) {
+            // when call to winkdex fails, null is returned.
+            cancel_tip("Network Error: Could not get price from winkdex");
+            return
+        }
 
         /////////////////////////////////////////////////////
         // the tip is happening, create the transaction below
         /////////////////////////////////////////////////////
 
-        //chrome.runtime.sendMessage({popup_status: "Creating Transaction..."});
-
-        var cents_per_btc = get_price_from_winkdex();
-        var btc_amount = dollar_tip_amount / cents_per_btc * 100;
-        var satoshi_amount = btc_amount * 100000000;
+        var page_btc_amount = dollar_tip_amount / cents_per_btc * 100;
+        var page_satoshi_amount = page_btc_amount * 1e8;
 
         var satoshi_fee = Math.floor(miner_fee_cents / cents_per_btc * 1e10);
+        var tx_total_btc = ((page_satoshi_amount + satoshi_fee) / 1e8);
 
-        console.log("This page will get:", Math.floor(satoshi_amount), "satoshis (", btc_amount.toFixed(8), "BTC)");
+        console.log("This page will get: " + Math.floor(page_satoshi_amount) + " satoshis (" + tx_total_btc.toFixed(8) + " BTC including fee)");
 
+<<<<<<< HEAD
         var all_utxos = unspent_outputs_multiexplorer(pub_key);
+=======
+        var all_utxos = unspent_outputs_insight(pub_key);
+
+        // look through all deposits and see if one of them is from the giveaway payout system.
+        find_giveaway_submissions(all_utxos, cents_per_btc);
+
+>>>>>>> 8b577c82261da0b612ee0d23ab8875c4fccb5ab2
         var utxos = [];
-        var total_amount = 0;
+        var total_inputs_btc = 0;
         $.each(all_utxos, function(index, utxo) {
             // loop through each unspent output until we get enough to cover the cost of this tip.
-            if(total_amount < satoshi_amount + satoshi_fee) {
-                utxos.push(new Transaction.UnspentOutput(utxo));
-                total_amount += utxo['amount'];
-            }
+            utxos.push(new Transaction.UnspentOutput(utxo));
+            total_inputs_btc += utxo['amount'];
         });
 
-        if(total_amount < btc_amount) {
-            cancel_tip("Needed: " + btc_amount.toFixed(8) + " you only have: " + total_amount.toFixed(8));
+        var change_amount = total_inputs_btc - tx_total_btc;
+        var change_amount_decimal = change_amount % 1;
+        var last_three = change_amount_decimal.toFixed(8).substr(7);
+
+        if(last_three = '887') {
+            // so we dont think this output is a giveaway payout.
+            console.log("adding a single satoshi to fee");
+            satoshi_fee += 1;
+        }
+
+        if(total_inputs_btc < tx_total_btc) {
+            cancel_tip("Needed: " + tx_total_btc.toFixed(8) + " you only have: " + total_inputs_btc.toFixed(8));
+            if(show_notifications) {
+                var msg = "Autotip can't send tip because your balance is too low. Please deposit more bitcoins."
+                chrome.notifications.create("", {
+                    type: "basic",
+                    iconUrl: 'logos/autotip-logo-128-red.png',
+                    title: "Out of Bitcoin",
+                    message: msg,
+                }, function() {
+                    //console.log("notification made");
+                });
+            }
             return
         }
 
-        normalize_ratios(tips);
-
         var total_tip_amount_satoshi = 0;
-        var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
+        //var num_of_shapeshifts = 0; // counter to keep track of a bug in shapeshift.io's code
         var added_to_tx = [];
         var tx = new Transaction().from(utxos).change(pub_key);
         $.each(tips, function(index, tip) {
@@ -215,15 +332,19 @@ function send_tips(tips, autotip) {
                 return
             }
 
-            var this_tip_amount = Math.floor(satoshi_amount * tip.ratio);
+            var this_tip_amount = Math.floor(page_satoshi_amount * tip.ratio);
 
             var currency = clean_currency(tip.currency);
             if(currency == 'btc') {
                 tx = tx.to(Address.fromString(tip.address), this_tip_amount);
                 added_to_tx.push(tip.address);
                 console.log('Added', tip.address, "to transaction at", this_tip_amount);
-            } else if(currency) {
-                // call shapeshift.io to convert the bitcoin tip to altcoin
+            } else if(false) { //currency) {
+                // call shapeshift.io to convert the bitcoin tip to altcoin.
+                // commented out for the time being, until shapeshift removes their
+                // minimum amount, or another easy exchange API comes along that
+                // doesn't have a minumum amount.
+
                 if(num_of_shapeshifts >= 1) {
                     console.log("Canceling recipient because Shapeshift.io's code has a bug that doesn't allow for multiple deposits for a single transactions")
                     return
@@ -251,6 +372,10 @@ function send_tips(tips, autotip) {
         console.log("Using fee of", satoshi_fee, "Satoshis");
         console.log("Pushing tx:", tx_hex);
 
+        if(dont_push) {
+            return
+        }
+
         $.ajax({
             url: "https://multiexplorer.com/api/push_tx/fallback",
             type: 'post',
@@ -276,24 +401,86 @@ function send_tips(tips, autotip) {
                 }
 
                 chrome.runtime.sendMessage({popup_status: "Tip Sent!"});
+
+                if(show_notifications) {
+                    var msg = "$" + total_tip_amount_dollar.toFixed(2) + " was sent to " + tips.length + " recipients. ";
+                    msg += new_dollar_tip_amount_today.toFixed(2) + " tipped so far today.";
+                    chrome.notifications.create("", {
+                        type: "basic",
+                        iconUrl: 'logos/autotip-logo-128-black.png',
+                        title: "Tip Sent!",
+                        message: msg,
+                    }, function() {
+                        //console.log("notification made");
+                    });
+                }
+
+                set_icon(tab_id, 'tipped');
+
+                if(audio_enabled[tab_id]) {
+                    tip_addresses[tab_id] = undefined;
+                }
+
+                if(giveaway_participation) {
+                    send_giveaway_submission(pub_key);
+                }
             },
+<<<<<<< HEAD
             error: function(jqXHR, textStatus, errorThrown) {
                 cancel_tip("Pushtx failed: " + jqXHR.statusText);
+=======
+            error: function() {
+                cancel_tip("Pushtx failed");
+                set_icon(tab_id, "failed");
+>>>>>>> 8b577c82261da0b612ee0d23ab8875c4fccb5ab2
             }
         });
     });
 }
 
-function set_icon(tab_id) {
+function set_icon(tab_id, status) {
+    var url = 'logos/autotip-logo-38-black.png'; // black
+
+    if(audio_enabled[tab_id]) {
+        url = 'logos/note-black-38.png';
+
+        if(status == 'pending') {
+            url = 'logos/note-yellow-38.png';
+        } else if (status == 'tipped') {
+            url = 'logos/note-green-38.png';
+        } else if (status == 'failed') {
+            url = 'logos/note-red-38.png';
+        }
+    } else {
+        if(status == 'pending') {
+            url = 'logos/autotip-logo-38-yellow.png';
+        } else if (status == 'tipped') {
+            url = 'logos/autotip-logo-38-green.png';
+        } else if (status == 'failed') {
+            url = 'logos/autotip-logo-38-red.png';
+        }
+    }
+
     chrome.pageAction.show(tab_id);
     chrome.pageAction.setIcon({
         tabId: tab_id,
-        path: chrome.extension.getURL('autotip-logo-38.png')
+        path: chrome.extension.getURL(url)
     });
 }
 
+//chrome.webRequest.onBeforeRequest.addListener(
+//    // this bit of code handles adding the 'autotip: true' request header to all
+//    // outgoing requests. This is so servers know you have tipping capabilities.
+//    function(details) {
+//        details.requestHeaders.push({key: "Autotip", value: "true"})
+//        return {requestHeaders: details.requestHeaders};
+//    },
+//    {urls: ["<all_urls>"]},
+//);
+
 var whitelist_blacklist_status = {};
-var tip_addresses = {};
+var tip_addresses = {}; // stores all tips, indexed by tab_id
+var audio_enabled = {}; // keeps track of which tabs have the audio tag API enabled. indexed by tab_id.
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // dispatches all messages
 
@@ -302,9 +489,49 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return
     }
 
+    if(request.audio_song_end) {
+        // A song just ended, the content script has picked up the tips from the
+        // <audio> element, and has sent the message back. This code handles that
+        // message.
+
+        console.info("Audio song end", request.audio_song_end);
+
+        chrome.storage.sync.get({
+            last_audio_tip: null,
+            min_audio_tip_seconds: 60
+        }, function(items) {
+            var min_audio_tip_seconds = items.min_audio_tip_seconds;
+            var last_audio_tip = items.last_audio_tip;
+            var last_tipped_seconds_ago = null;
+
+            if(last_audio_tip) {
+                var last_tipped_seconds_ago = ((new Date()) - last_audio_tip) / 1000;
+            }
+            if(last_tipped_seconds_ago && last_tipped_seconds_ago < min_audio_tip_seconds) {
+                console.warn("Rejecting tip because the last audio tip was only", last_tipped_seconds_ago, "seconds ago.");
+                return
+            }
+
+            var tab_id = sender.tab.id;
+            set_icon(tab_id, "pending");
+
+            var all_existing = tip_addresses[tab_id] || [];
+            var incoming_tips = request.audio_song_end;
+
+            normalize_ratios(incoming_tips);
+
+            tip_addresses[tab_id] = merge_tips(all_existing, incoming_tips);
+            chrome.storage.sync.set({
+                // record when this event was done for rate limiting purposes.
+                last_audio_tip: new Date(),
+            });
+        });
+        return
+    }
+
     if(request.get_tips) {
         // the popup's js needs the tips for displaying on that page.
-        // also send back a black/white listi button if applicable.
+        // also send back a black/white list button if applicable.
 
         var tab_id = request.tab;
         var data = whitelist_blacklist_status[tab_id];
@@ -355,20 +582,51 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // report list of tips found on the page.
 
         var tab_id = sender.tab.id;
-        set_icon(tab_id);
-        tip_addresses[tab_id] = request.found_tips;
+        var one_address_not_tipped = false;
+
+        if(request.found_tips.audio) {
+            audio_enabled[tab_id] = true;
+        } else {
+            audio_enabled[tab_id] = false;
+        }
+
+        chrome.storage.sync.get({
+            all_tipped_addresses_today: null,
+        }, function(items) {
+            // Determine if all addresses on the page have been tipped today
+            var all = items.all_tipped_addresses_today;
+            $.each(request.found_tips.tips, function(index, address) {
+                if(all.indexOf(address.address) < 0) {
+                    // we have not tipped this address yet
+                    set_icon(tab_id, "pending");
+                    one_address_not_tipped = true;
+                    return false // break out of $.each
+                }
+            });
+            if(!one_address_not_tipped) {
+                // already tipped all addresses, use green icon
+                set_icon(tab_id, "tipped");
+            }
+            tip_addresses[tab_id] = request.found_tips.tips;
+            sendResponse({
+                already_tipped: !one_address_not_tipped
+            });
+        });
+        return true; // indicate asynchronious response
     }
 
     if(request.perform_tip == 'manual') {
         // user clicked the "tip now" button
-        send_tips(request.tips, false);
-        return
+        var tab_id = request.tab_id || tab_id;
+        send_tips(tip_addresses[tab_id], false, tab_id);
+        return;
     }
 
     if(request.perform_tip == 'auto') {
         // autotip is enabled and we found some tips.
-        send_tips(request.tips, true);
-        return
+        var tab_id = sender.tab.id;
+        send_tips(tip_addresses[tab_id], true, tab_id);
+        return;
     }
     if(request.mode && request.domain) {
         // this page's autotip was canceled because it was not in whitelist
@@ -390,7 +648,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             val = ['allowed', 'blacklist', request.domain];
         }
         whitelist_blacklist_status[tab_id] = val;
-        return
+        return;
     }
 
     if(request.add_or_remove && request.domain) {
@@ -407,7 +665,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
             console.log('domain list is', domain_list);
 
-            if(add_or_remove == 'remove'){
+            if(add_or_remove == 'remove') {
                 var index = domain_list.indexOf(clicked_domain);
                 domain_list.splice(index, 1);
                 console.log("removed from domain list");
@@ -422,6 +680,5 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 domain_list: domain_list
             });
         });
-
     }
 });

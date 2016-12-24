@@ -3,16 +3,17 @@
 Autotip is:
 
 * A decentralized cryptocurrency microtipping platform.
-* An Open source Google Chrome extension.
-* All tips move directly from tipper to tipee with no middleman. (No account required)
+* Currently there is only one plugin supporting the autotip protocol: An Open source Google Chrome extension.
+* All tips move directly from tipper to tipee with no middleman (other than the bitcoin network). No account required.
 * Alternate way for content creators (bloggers, forums posters, artists) to monetize their content.
 * HTML5 standards compliant (official inclusion to the HTML standard is [pending](https://github.com/priestc/Autotip/issues/1)).
-* A system where you can reiceve Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
+* A system where you can receive Bitcoin and other cryptocurrencies such as Dogecoin, Litecoin and many others.
 
-This project written for the Miami Bitcoin hackathon on January 9-10, 2015.
+For more information go here: [http://autotip.io](http://autotip.io)
 
-## Setup for tippers
+Autotip in the news:
 
+<<<<<<< HEAD
 Search for Autotip in the chrome extension store. Once you've installed it, open up the
 extensions page by navigating to `chrome://extensions`:
 
@@ -104,3 +105,8 @@ This extension uses the following APIs:
 * [Bitpay Insight](https://insight.bitpay.com/) - getting unspent outputs.
 * [Winkdex](https://winkdex.com) - getting current exchange rate
 * [Blockchain.info](http://blockchain.info) - getting balance of an address.
+=======
+* http://bravenewcoin.com/news/autotip-launches-while-coinbase-bows-out-to-changetip/
+* http://cointelegraph.com/news/113461/pay-the-content-creators-decentralized-autotip-service-released
+* http://b1bl3.com/autotip-a-free-google-chrome-plugin-to-tip-content-creators-with-bitcoin-or-altcoins/
+>>>>>>> 8b577c82261da0b612ee0d23ab8875c4fccb5ab2

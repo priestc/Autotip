@@ -28,7 +28,10 @@
     </head>
     <body>
         <div id="container">
-            <h1><img src="autotip-logo-128.png" style="vertical-align: middle"> Autotip Options</h1>
+            <div style="text-align: right; width: 100%">
+                Deposit Balance: <span class="current_balance"><img src="spinner.gif"></span>
+            </div>
+            <h1>Autotip Options</h1>
 
             <input type="button" class="save_button" value="Save Options"> <span class="status"></span>
 
@@ -45,13 +48,30 @@
             <h2>Miner's Fee</h2>
             $ <input type="text" name="miner_fee" style="width: 3em"> USD
 
+            <h2>Giveaway Participation</h2>
+            <input type="checkbox" name="giveaway_participation"> Participate<br>
+            <small>As you tip, this extension will 'phone home' to enter your
+                tipping address into a giveaway where you can win bitcoin.
+                No personal informatin is sent, only your deposit address.
+                For more information <a href="http://autotip.io/giveaway/info">go here</a>.</small>
+
+            <h2>Audio Tipping</h2>
+            Minimum seconds between audio tips: <input type="number" name="min_audio_tip_seconds"><br>
+            <small>This is to prevent a malicious page from sending lots of tips really fast, cleaning out your balance.</small><br>
+            <br>
+            <input type="radio" name="song_autotip" value="off"> Never tip songs automatically<br>
+            <input type="radio" name="song_autotip" value="on"> Automatically send tip every <input type="number" name="send_music_tip_every_x_songs"> Songs.
+
             <h2>Tipping Mode</h2>
             <input type="radio" name="when_to_send" value="immediately">Tip automatically without asking <strong>immediately</strong> upon page load.<br>
             <input type="radio" name="when_to_send" value="5mins">Tip automatically without asking after being on the page for <input type="number" name="interval_seconds"> seconds.<br>
             <input type="radio" name="when_to_send" value="ask">Never Tip automatically. Only tip when I do so from the popup.<br>
             <br>
             <input type="checkbox" name="one_per_address"> Limit to one tip per address per day when auto tipping.<br>
+
+            <h2>Notifications</h2>
             <input type="checkbox" name="beep_on_tip"> Beep after making a tip.<br>
+            <input type="checkbox" name="show_notifications"> Show browser notifications. <br>
 
             <h2>Whitelist/Blacklist</h2>
             <input type="radio" name="blacklist_or_whitelist" value="none"> Allow tips on every domain.<br>
@@ -67,7 +87,7 @@
             <div id="qr"></div>
             Public Key: <strong id="deposit_address"></strong> <br>
             Private Key: <span id="priv_key"></span> <br>
-            Balance: <span id="current_balance"><img src="spinner.gif"></span>
+            Balance: <span class="current_balance"><img src="spinner.gif"></span>
 
             <br><br>
 
